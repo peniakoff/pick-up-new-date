@@ -139,7 +139,6 @@
             button.type = "button";
             button.className = "calendarNavButton";
             button.setAttribute("aria-label", label);
-            button.title = label;
             button.addEventListener("click", action);
 
             const iconNode = document.createElement("span");
@@ -156,7 +155,7 @@
             button.type = "button";
             button.className = "calendarDayButton";
             button.textContent = day;
-            button.setAttribute("aria-label", this.labels.chooseDate + ": " + day + " " + this.monthName + " " + this.currentYear);
+            button.setAttribute("aria-label", `${this.labels.chooseDate}: ${day} ${this.monthName} ${this.currentYear}`);
 
             if (
                 day === this.today.getDate() &&
@@ -181,16 +180,17 @@
             const navRow = document.createElement("tr");
             const daysRow = document.createElement("tr");
             const weeks = getMonthGrid(this.currentYear, this.currentMonth);
+            const monthYearLabel = `${this.monthName}, ${this.currentYear}`;
 
             table.className = "calendar";
             table.setAttribute("role", "grid");
-            table.setAttribute("aria-label", this.labels.calendar + ": " + this.monthName + " " + this.currentYear);
+            table.setAttribute("aria-label", `${this.labels.calendar}: ${this.monthName} ${this.currentYear}`);
             table.tabIndex = 0;
             table.addEventListener("keydown", this.handleKeydown);
 
             const caption = document.createElement("caption");
             caption.className = "calendarCaption";
-            caption.textContent = this.monthName + ", " + this.currentYear;
+            caption.textContent = monthYearLabel;
             table.appendChild(caption);
 
             const prevCell = document.createElement("td");
@@ -202,8 +202,7 @@
             const titleCell = document.createElement("td");
             titleCell.className = "monthHeader monthTitle";
             titleCell.colSpan = 5;
-            titleCell.textContent = this.monthName + ", " + this.currentYear;
-            titleCell.title = this.monthName + ", " + this.currentYear;
+            titleCell.textContent = monthYearLabel;
 
             const nextCell = document.createElement("td");
             nextCell.className = "monthHeader";
