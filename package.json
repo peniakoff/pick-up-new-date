@@ -1,0 +1,54 @@
+{
+  "name": "pickupnewdate",
+  "version": "1.0.0",
+  "description": "Simple multilingual calendar library for browsers and Node.js.",
+  "type": "module",
+  "main": "./dist/pickupnewdate.cjs",
+  "module": "./dist/pickupnewdate.esm.js",
+  "types": "./dist/pickupnewdate.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/pickupnewdate.d.ts",
+      "import": "./dist/pickupnewdate.esm.js",
+      "require": "./dist/pickupnewdate.cjs",
+      "default": "./dist/pickupnewdate.esm.js"
+    },
+    "./style.css": "./dist/pickupnewdate.css"
+  },
+  "files": [
+    "dist/",
+    "LICENSE.md",
+    "README.md"
+  ],
+  "scripts": {
+    "clean": "node -e \"import('node:fs').then(({rmSync}) => rmSync('dist', { recursive: true, force: true }))\"",
+    "build": "npm run clean && rollup -c && npm run build:assets",
+    "build:assets": "node -e \"import('node:fs').then(({copyFileSync}) => { copyFileSync('style.css', 'dist/pickupnewdate.css'); copyFileSync('src/pickupnewdate.d.ts', 'dist/pickupnewdate.d.ts'); })\"",
+    "test": "node --test",
+    "test:build": "npm run build && npm test",
+    "prepublishOnly": "npm run build && npm test",
+    "version:patch": "npm version patch",
+    "version:minor": "npm version minor",
+    "version:major": "npm version major"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/peniakoff/PickUpNewDate.git"
+  },
+  "keywords": [
+    "calendar",
+    "datepicker",
+    "i18n"
+  ],
+  "author": "Tomasz Miller",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/peniakoff/PickUpNewDate/issues"
+  },
+  "homepage": "https://github.com/peniakoff/PickUpNewDate#readme",
+  "style": "./dist/pickupnewdate.css",
+  "devDependencies": {
+    "@rollup/plugin-terser": "^1.0.0",
+    "rollup": "^4.60.4"
+  }
+}
