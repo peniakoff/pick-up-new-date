@@ -120,6 +120,7 @@ table.calendar td.currentMonth .calendarDayButton.today {
 
 table.calendar tr:nth-child(1n+3) td.currentMonth:hover {
     background-color: #FF7043;
+    color: #111;
     cursor: pointer;
     transition: box-shadow 0.1s;
 }

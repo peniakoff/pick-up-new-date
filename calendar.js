@@ -36,6 +36,7 @@
 
     const MONTH_DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
+    // Gregorian calendar: century years are leap years only when divisible by 400.
     function isLeapYear(year) {
         return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
     }
