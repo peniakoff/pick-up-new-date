@@ -108,7 +108,8 @@ export function getMonthGrid(year, month) {
 
 export function getCalendarViewModel(year, month, lang) {
     const language = resolveLanguage(lang);
-    const weeks = getMonthGrid(year, month).map((week) => Object.freeze(week));
+    const weeks = getMonthGrid(year, month);
+    weeks.forEach((week) => Object.freeze(week));
 
     return Object.freeze({
         year,
