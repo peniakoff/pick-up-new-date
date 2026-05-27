@@ -108,15 +108,15 @@ export function getMonthGrid(year, month) {
 
 export function getCalendarViewModel(year, month, lang) {
     const language = resolveLanguage(lang);
-    const weeks = getMonthGrid(year, month).map((week) => Object.freeze([...week]));
+    const weeks = getMonthGrid(year, month).map((week) => Object.freeze(week));
 
     return Object.freeze({
         year,
         month,
         language,
         monthName: MONTH_NAMES[language][month - 1],
-        dayNames: Object.freeze([...DAY_NAMES[language]]),
-        labels: Object.freeze({ ...LABELS[language] }),
+        dayNames: DAY_NAMES[language],
+        labels: LABELS[language],
         weeks: Object.freeze(weeks)
     });
 }

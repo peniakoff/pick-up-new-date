@@ -29,9 +29,9 @@ export class Calendar {
             throw new Error(`PickUpNewDate: target area "${area}" was not found.`);
         }
 
-        this.today = new Date();
-        this.currentMonth = this.today.getMonth() + 1;
-        this.currentYear = this.today.getFullYear();
+        const today = new Date();
+        this.currentMonth = today.getMonth() + 1;
+        this.currentYear = today.getFullYear();
         this.handleKeydown = this.handleKeydown.bind(this);
         this.render();
     }
@@ -135,11 +135,8 @@ export class Calendar {
         button.textContent = day;
         button.setAttribute("aria-label", `${this.labels.chooseDate}: ${day} ${this.monthName} ${this.currentYear}`);
 
-        if (
-            day === this.today.getDate() &&
-            this.currentMonth === this.today.getMonth() + 1 &&
-            this.currentYear === this.today.getFullYear()
-        ) {
+        const today = new Date();
+        if (day === today.getDate() && this.currentMonth === today.getMonth() + 1 && this.currentYear === today.getFullYear()) {
             button.classList.add("today");
             button.setAttribute("aria-current", "date");
         }

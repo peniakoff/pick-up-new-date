@@ -94,6 +94,9 @@ test("pickUpNewDate validates target area", () => {
         global.document = {
             getElementById() {
                 return null;
+            },
+            createElement() {
+                return {};
             }
         };
 
