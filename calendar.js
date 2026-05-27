@@ -204,7 +204,7 @@
             }));
 
             const titleCell = document.createElement("td");
-            titleCell.className = "monthHeader monthTitle";
+            titleCell.className = "monthHeader";
             titleCell.colSpan = 5;
             titleCell.textContent = monthYearLabel;
 
