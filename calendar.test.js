@@ -58,15 +58,17 @@ test("resolveLanguage falls back to english for unsupported values", () => {
 
 test("pickUpNewDate validates target area", () => {
     const originalDocument = global.document;
-    global.document = {
-        getElementById() {
-            return null;
-        }
-    };
+    try {
+        global.document = {
+            getElementById() {
+                return null;
+            }
+        };
 
-    assert.throws(() => {
-        pickUpNewDate("eng", "missing");
-    }, /target area "missing" was not found/);
-
-    global.document = originalDocument;
+        assert.throws(() => {
+            pickUpNewDate("eng", "missing");
+        }, /target area "missing" was not found/);
+    } finally {
+        global.document = originalDocument;
+    }
 });

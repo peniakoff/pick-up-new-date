@@ -142,8 +142,8 @@
             button.title = label;
             button.addEventListener("click", action);
 
-            const iconNode = document.createElement("i");
-            iconNode.className = "material-icons";
+            const iconNode = document.createElement("span");
+            iconNode.className = "calendarNavIcon";
             iconNode.setAttribute("aria-hidden", "true");
             iconNode.textContent = icon;
             button.appendChild(iconNode);
@@ -195,7 +195,7 @@
 
             const prevCell = document.createElement("td");
             prevCell.className = "monthHeader";
-            prevCell.appendChild(this.createNavigationButton("navigate_before", this.labels.previousMonth, () => {
+            prevCell.appendChild(this.createNavigationButton("‹", this.labels.previousMonth, () => {
                 this.prevMonth();
             }));
 
@@ -207,7 +207,7 @@
 
             const nextCell = document.createElement("td");
             nextCell.className = "monthHeader";
-            nextCell.appendChild(this.createNavigationButton("navigate_next", this.labels.nextMonth, () => {
+            nextCell.appendChild(this.createNavigationButton("›", this.labels.nextMonth, () => {
                 this.nextMonth();
             }));
 
