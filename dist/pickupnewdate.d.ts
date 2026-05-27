@@ -1,6 +1,6 @@
 export type Language = "eng" | "pl" | "de";
 
-export interface DayNames {
+export interface LocalizedStrings {
     eng: string[];
     pl: string[];
     de: string[];
@@ -31,8 +31,8 @@ export interface CalendarOptions {
     onDateSelect?: (date: Date) => void;
 }
 
-export declare const DAY_NAMES: DayNames;
-export declare const MONTH_NAMES: DayNames;
+export declare const DAY_NAMES: LocalizedStrings;
+export declare const MONTH_NAMES: LocalizedStrings;
 export declare const LABELS: Labels;
 
 export declare function isLeapYear(year: number): boolean;
