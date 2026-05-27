@@ -135,7 +135,7 @@ export class Calendar {
         button.textContent = day;
         button.setAttribute("aria-label", `${this.labels.chooseDate}: ${day} ${this.monthName} ${this.currentYear}`);
 
-        const today = this.renderedAt || new Date();
+        const today = this.renderedAt;
         if (day === today.getDate() && this.currentMonth === today.getMonth() + 1 && this.currentYear === today.getFullYear()) {
             button.classList.add("today");
             button.setAttribute("aria-current", "date");
