@@ -1,10 +1,29 @@
 import { DAY_NAMES, LABELS, MONTH_NAMES, getMonthGrid, resolveLanguage } from "./core.js";
 
+function isElementLike(value) {
+    return value && typeof value === "object" && typeof value.replaceChildren === "function";
+}
+
 export class Calendar {
     constructor(lang, area, options) {
         this.lang = resolveLanguage(lang);
         this.options = options || {};
-        this.root = typeof area === "string" ? document.getElementById(area) : area;
+        this.documentRef = this.resolveDocument(this.options.document);
+
+        if (!this.documentRef) {
+            throw new Error(
+                "PickUpNewDate: document is unavailable. Initialize on the client or provide options.document."
+            );
+        }
+
+        if (
+            typeof this.options.onDateSelect !== "undefined" &&
+            typeof this.options.onDateSelect !== "function"
+        ) {
+            throw new Error("PickUpNewDate: options.onDateSelect must be a function.");
+        }
+
+        this.root = this.resolveRoot(area);
 
         if (!this.root) {
             throw new Error(`PickUpNewDate: target area "${area}" was not found.`);
@@ -15,6 +34,36 @@ export class Calendar {
         this.currentYear = this.today.getFullYear();
         this.handleKeydown = this.handleKeydown.bind(this);
         this.render();
+    }
+
+    resolveDocument(customDocument) {
+        if (customDocument) {
+            if (
+                typeof customDocument.getElementById !== "function" ||
+                typeof customDocument.createElement !== "function"
+            ) {
+                throw new Error("PickUpNewDate: options.document must implement getElementById and createElement.");
+            }
+            return customDocument;
+        }
+
+        if (typeof document !== "undefined") {
+            return document;
+        }
+
+        return null;
+    }
+
+    resolveRoot(area) {
+        if (typeof area === "string") {
+            return this.documentRef.getElementById(area);
+        }
+
+        if (!isElementLike(area)) {
+            throw new Error("PickUpNewDate: target area must be a DOM element or element id.");
+        }
+
+        return area;
     }
 
     get monthName() {
@@ -64,13 +113,13 @@ export class Calendar {
     }
 
     createNavigationButton(icon, label, action) {
-        const button = document.createElement("button");
+        const button = this.documentRef.createElement("button");
         button.type = "button";
         button.className = "calendarNavButton";
         button.setAttribute("aria-label", label);
         button.addEventListener("click", action);
 
-        const iconNode = document.createElement("span");
+        const iconNode = this.documentRef.createElement("span");
         iconNode.className = "calendarNavIcon";
         iconNode.setAttribute("aria-hidden", "true");
         iconNode.textContent = icon;
@@ -80,7 +129,7 @@ export class Calendar {
     }
 
     createDayButton(day) {
-        const button = document.createElement("button");
+        const button = this.documentRef.createElement("button");
         button.type = "button";
         button.className = "calendarDayButton";
         button.textContent = day;
@@ -103,11 +152,11 @@ export class Calendar {
     }
 
     render() {
-        const table = document.createElement("table");
-        const thead = document.createElement("thead");
-        const tbody = document.createElement("tbody");
-        const navRow = document.createElement("tr");
-        const daysRow = document.createElement("tr");
+        const table = this.documentRef.createElement("table");
+        const thead = this.documentRef.createElement("thead");
+        const tbody = this.documentRef.createElement("tbody");
+        const navRow = this.documentRef.createElement("tr");
+        const daysRow = this.documentRef.createElement("tr");
         const weeks = getMonthGrid(this.currentYear, this.currentMonth);
         const monthYearLabel = `${this.monthName}, ${this.currentYear}`;
 
@@ -117,23 +166,23 @@ export class Calendar {
         table.tabIndex = 0;
         table.addEventListener("keydown", this.handleKeydown);
 
-        const caption = document.createElement("caption");
+        const caption = this.documentRef.createElement("caption");
         caption.className = "calendarCaption";
         caption.textContent = monthYearLabel;
         table.appendChild(caption);
 
-        const prevCell = document.createElement("td");
+        const prevCell = this.documentRef.createElement("td");
         prevCell.className = "monthHeader";
         prevCell.appendChild(this.createNavigationButton("‹", this.labels.previousMonth, () => {
             this.prevMonth();
         }));
 
-        const titleCell = document.createElement("td");
+        const titleCell = this.documentRef.createElement("td");
         titleCell.className = "monthHeader";
         titleCell.colSpan = 5;
         titleCell.textContent = monthYearLabel;
 
-        const nextCell = document.createElement("td");
+        const nextCell = this.documentRef.createElement("td");
         nextCell.className = "monthHeader";
         nextCell.appendChild(this.createNavigationButton("›", this.labels.nextMonth, () => {
             this.nextMonth();
@@ -145,7 +194,7 @@ export class Calendar {
         thead.appendChild(navRow);
 
         DAY_NAMES[this.lang].forEach((dayName) => {
-            const headerCell = document.createElement("th");
+            const headerCell = this.documentRef.createElement("th");
             headerCell.className = "weekDayName";
             headerCell.scope = "col";
             headerCell.textContent = dayName;
@@ -154,10 +203,10 @@ export class Calendar {
         thead.appendChild(daysRow);
 
         weeks.forEach((week) => {
-            const row = document.createElement("tr");
+            const row = this.documentRef.createElement("tr");
 
             week.forEach((day, index) => {
-                const cell = document.createElement("td");
+                const cell = this.documentRef.createElement("td");
                 cell.setAttribute("role", "gridcell");
 
                 if (day) {

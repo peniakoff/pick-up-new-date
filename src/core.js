@@ -1,16 +1,27 @@
-export const DAY_NAMES = {
+function deepFreeze(value) {
+    if (value && typeof value === "object") {
+        Object.freeze(value);
+        Object.keys(value).forEach((key) => {
+            deepFreeze(value[key]);
+        });
+    }
+
+    return value;
+}
+
+export const DAY_NAMES = deepFreeze({
     eng: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
     pl: ["Pn", "Wt", "Śr", "Cz", "Pt", "So", "Nd"],
     de: ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
-};
+});
 
-export const MONTH_NAMES = {
+export const MONTH_NAMES = deepFreeze({
     eng: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
     pl: ["Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec", "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień"],
     de: ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"]
-};
+});
 
-export const LABELS = {
+export const LABELS = deepFreeze({
     eng: {
         previousMonth: "previous month",
         nextMonth: "next month",
@@ -29,15 +40,31 @@ export const LABELS = {
         calendar: "Kalender",
         chooseDate: "Datum auswählen"
     }
-};
+});
 
-const MONTH_DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+const MONTH_DAYS = deepFreeze([31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]);
+
+function validateYear(year) {
+    if (!Number.isInteger(year) || year < 1 || year > 9999) {
+        throw new RangeError("PickUpNewDate: year must be an integer between 1 and 9999.");
+    }
+}
+
+function validateMonth(month) {
+    if (!Number.isInteger(month) || month < 1 || month > 12) {
+        throw new RangeError("PickUpNewDate: month must be an integer between 1 and 12.");
+    }
+}
 
 export function isLeapYear(year) {
+    validateYear(year);
     return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
 }
 
 export function getDaysInMonth(year, month) {
+    validateYear(year);
+    validateMonth(month);
+
     if (month === 2 && isLeapYear(year)) {
         return 29;
     }
@@ -58,6 +85,9 @@ function toMondayFirst(day) {
 }
 
 export function getMonthGrid(year, month) {
+    validateYear(year);
+    validateMonth(month);
+
     const firstWeekday = toMondayFirst(new Date(year, month - 1, 1).getDay());
     const totalDays = getDaysInMonth(year, month);
     const weeks = [];
@@ -74,4 +104,18 @@ export function getMonthGrid(year, month) {
     }
 
     return weeks;
+}
+
+export function getCalendarViewModel(year, month, lang) {
+    const language = resolveLanguage(lang);
+
+    return {
+        year,
+        month,
+        language,
+        monthName: MONTH_NAMES[language][month - 1],
+        dayNames: [...DAY_NAMES[language]],
+        labels: { ...LABELS[language] },
+        weeks: getMonthGrid(year, month)
+    };
 }

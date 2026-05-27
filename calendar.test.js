@@ -3,6 +3,7 @@ import test from "node:test";
 
 import pickUpNewDate, {
     DAY_NAMES,
+    getCalendarViewModel,
     getDaysInMonth,
     getMonthGrid,
     isLeapYear,
@@ -48,6 +49,32 @@ test("getMonthGrid does not mutate DAY_NAMES constants", () => {
     assert.equal(DAY_NAMES.de.length, 7);
 });
 
+test("calendar constants stay immutable for data integrity", () => {
+    assert.equal(Object.isFrozen(DAY_NAMES), true);
+    assert.equal(Object.isFrozen(DAY_NAMES.eng), true);
+    assert.equal(Object.isFrozen(getCalendarViewModel(2024, 2, "eng").labels), false);
+});
+
+test("calendar helpers reject invalid year and month inputs", () => {
+    assert.throws(() => {
+        getDaysInMonth(2024, 0);
+    }, /month must be an integer between 1 and 12/);
+
+    assert.throws(() => {
+        getMonthGrid(0, 2);
+    }, /year must be an integer between 1 and 9999/);
+});
+
+test("getCalendarViewModel provides framework-friendly data model", () => {
+    const model = getCalendarViewModel(2024, 2, "pl");
+
+    assert.equal(model.language, "pl");
+    assert.equal(model.monthName, "Luty");
+    assert.equal(model.dayNames.length, 7);
+    assert.equal(Array.isArray(model.weeks), true);
+    assert.equal(typeof model.labels.chooseDate, "string");
+});
+
 test("resolveLanguage falls back to english for unsupported values", () => {
     assert.equal(resolveLanguage(), "eng");
     assert.equal(resolveLanguage(""), "eng");
@@ -67,6 +94,36 @@ test("pickUpNewDate validates target area", () => {
         assert.throws(() => {
             pickUpNewDate("eng", "missing");
         }, /target area "missing" was not found/);
+    } finally {
+        global.document = originalDocument;
+    }
+});
+
+test("pickUpNewDate is explicit about non-browser usage", () => {
+    const originalDocument = global.document;
+    try {
+        global.document = undefined;
+
+        assert.throws(() => {
+            pickUpNewDate("eng", "calendar");
+        }, /document is unavailable/);
+    } finally {
+        global.document = originalDocument;
+    }
+});
+
+test("pickUpNewDate validates callback option type", () => {
+    const originalDocument = global.document;
+    try {
+        global.document = {
+            getElementById() {
+                return null;
+            }
+        };
+
+        assert.throws(() => {
+            pickUpNewDate("eng", "calendar", { onDateSelect: "nope" });
+        }, /options.onDateSelect must be a function/);
     } finally {
         global.document = originalDocument;
     }
