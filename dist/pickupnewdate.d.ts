@@ -29,6 +29,17 @@ export interface Labels {
 
 export interface CalendarOptions {
     onDateSelect?: (date: Date) => void;
+    document?: Pick<Document, "createElement" | "getElementById">;
+}
+
+export interface CalendarViewModel {
+    year: number;
+    month: number;
+    language: Language;
+    monthName: string;
+    dayNames: string[];
+    labels: Labels[Language];
+    weeks: Array<Array<number | null>>;
 }
 
 export declare const DAY_NAMES: LocalizedStrings;
@@ -38,6 +49,7 @@ export declare const LABELS: Labels;
 export declare function isLeapYear(year: number): boolean;
 export declare function getDaysInMonth(year: number, month: number): number;
 export declare function getMonthGrid(year: number, month: number): Array<Array<number | null>>;
+export declare function getCalendarViewModel(year: number, month: number, lang?: string): CalendarViewModel;
 export declare function resolveLanguage(lang?: string): Language;
 
 export declare class Calendar {
