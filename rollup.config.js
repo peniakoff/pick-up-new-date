@@ -22,7 +22,7 @@ export default [
         output: {
             file: "dist/pickupnewdate.umd.js",
             format: "umd",
-            name: "pickUpNewDate",
+            name: "PickUpNewDate",
             plugins: [terser()]
         }
     }
