@@ -3,6 +3,7 @@ import test from "node:test";
 
 import pickUpNewDate, {
     DAY_NAMES,
+    LABELS,
     getCalendarViewModel,
     getDaysInMonth,
     getMonthGrid,
@@ -52,7 +53,8 @@ test("getMonthGrid does not mutate DAY_NAMES constants", () => {
 test("calendar constants stay immutable for data integrity", () => {
     assert.equal(Object.isFrozen(DAY_NAMES), true);
     assert.equal(Object.isFrozen(DAY_NAMES.eng), true);
-    assert.equal(Object.isFrozen(getCalendarViewModel(2024, 2, "eng").labels), false);
+    assert.equal(Object.isFrozen(LABELS), true);
+    assert.equal(Object.isFrozen(LABELS.eng), true);
 });
 
 test("calendar helpers reject invalid year and month inputs", () => {
@@ -73,6 +75,10 @@ test("getCalendarViewModel provides framework-friendly data model", () => {
     assert.equal(model.dayNames.length, 7);
     assert.equal(Array.isArray(model.weeks), true);
     assert.equal(typeof model.labels.chooseDate, "string");
+    assert.equal(Object.isFrozen(model), true);
+    assert.equal(Object.isFrozen(model.dayNames), true);
+    assert.equal(Object.isFrozen(model.labels), true);
+    assert.equal(Object.isFrozen(model.weeks[0]), true);
 });
 
 test("resolveLanguage falls back to english for unsupported values", () => {
