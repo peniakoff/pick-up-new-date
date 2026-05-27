@@ -34,13 +34,17 @@
         }
     };
 
+    const MONTH_DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
     function isLeapYear(year) {
         return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
     }
 
     function getDaysInMonth(year, month) {
-        const days = [31, isLeapYear(year) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-        return days[month - 1];
+        if (month === 2 && isLeapYear(year)) {
+            return 29;
+        }
+        return MONTH_DAYS[month - 1];
     }
 
     function resolveLanguage(lang) {
