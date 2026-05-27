@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css?family=Roboto');
 body {
     font-family: 'Roboto', sans-serif;
+    margin: 0;
 }
 
 table.calendar {
@@ -11,9 +12,15 @@ table.calendar {
     cursor: default;
     border-collapse: separate;
     border-spacing: 7px;
+    background-color: #fff;
 }
 
-table.calendar td {
+table.calendar:focus {
+    outline: 3px solid #64B5F6;
+    outline-offset: 4px;
+}
+
+table.calendar td, table.calendar th {
     border: 0;
     border-radius: 6px;
     min-width: 40px;
@@ -31,24 +38,41 @@ table.calendar td.monthHeader {
 
 table.calendar td.monthHeader:first-child, table.calendar td.monthHeader:last-child {
     border-radius: 20px;
-    cursor: pointer;
 }
 
-table.calendar td.monthHeader i {
+table.calendar td.monthHeader .calendarNavButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     width: 40px;
-    line-height: 40px;
-    font-size: 18px;
+    height: 40px;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
     border-radius: 20px;
     background-color: #64B5F6;
     box-shadow: 0 2px 6px #BDBDBD;
-    transition: box-shadow .1s;
+    transition: box-shadow .1s, transform .1s;
 }
 
-table.calendar td.monthHeader i:active {
+table.calendar td.monthHeader .calendarNavButton i {
+    width: 40px;
+    line-height: 40px;
+    font-size: 18px;
+}
+
+table.calendar td.monthHeader .calendarNavButton:active {
     box-shadow: 0 5px 8px #BDBDBD;
+    transform: translateY(1px);
 }
 
-table.calendar td.weekDayName {
+table.calendar td.monthHeader .calendarNavButton:focus-visible,
+table.calendar td.currentMonth .calendarDayButton:focus-visible {
+    outline: 2px solid #1B5E20;
+    outline-offset: 2px;
+}
+
+table.calendar th.weekDayName {
     border-radius: 20px;
     background-color: #1B5E20;
     color: white;
@@ -57,11 +81,11 @@ table.calendar td.weekDayName {
     box-shadow: 0 2px 6px #BDBDBD;
 }
 
-table.calendar td.weekDayName:nth-child(6) {
+table.calendar th.weekDayName:nth-child(6) {
     background-color: #F57F17;
 }
 
-table.calendar td.weekDayName:last-child {
+table.calendar th.weekDayName:last-child {
     background-color: #880E4F;
 }
 
@@ -80,7 +104,26 @@ table.calendar td.currentMonth:last-child {
     background-color: #F48FB1;
 }
 
-table.calendar td.today {
+table.calendar td.currentMonth.weekend {
+    background-color: #FFF59D;
+}
+
+table.calendar td.currentMonth.sunday {
+    background-color: #F48FB1;
+}
+
+table.calendar td.currentMonth .calendarDayButton {
+    width: 100%;
+    min-height: 40px;
+    border: 0;
+    border-radius: 20px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+table.calendar td.currentMonth .calendarDayButton.today {
     background-color: #B39DDB !important;
 }
 
@@ -92,4 +135,47 @@ table.calendar tr:nth-child(1n+3) td.currentMonth:hover {
 
 table.calendar tr:nth-child(1n+3) td.currentMonth:active {
     box-shadow: 0 5px 8px #BDBDBD;
+}
+
+.calendarCaption {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
+@media (max-width: 640px) {
+    table.calendar {
+        width: calc(100% - 24px);
+        margin: 12px;
+        border-spacing: 4px;
+        padding: 8px;
+    }
+
+    table.calendar td, table.calendar th {
+        min-width: 0;
+    }
+
+    table.calendar td.monthHeader,
+    table.calendar th.weekDayName,
+    table.calendar td.currentMonth .calendarDayButton {
+        font-size: 14px;
+        line-height: 32px;
+        min-height: 32px;
+    }
+
+    table.calendar td.monthHeader .calendarNavButton {
+        width: 32px;
+        height: 32px;
+    }
+
+    table.calendar td.monthHeader .calendarNavButton i {
+        width: 32px;
+        line-height: 32px;
+        font-size: 16px;
+    }
 }

@@ -1,207 +1,281 @@
-/*
-* PickUpNewDate JS Calendar writed by Tomasz Miller (Peniakoff)
-*/
-
-var document,
-    window,
-    funcArray;
-
-function pickUpNewDate(lang, area) {
+(function (global) {
     "use strict";
-    var d = new Date(),
-        day = d.getDate(),
-        month = d.getMonth() + 1,
-        year = d.getFullYear(),
-        dayOfWeek = d.getDay(),
-        dayOfMonth,
-        endOfMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
-        dayOfWeekName = [
-            ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-            ["Pn", "Wt", "Śr", "Cz", "Pt", "So", "Nd"],
-            ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
-        ],
-        monthName = [
-            ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
-            ["Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec", "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień"],
-            ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"]
-        ],
-        tableHeader = [
-            ["previous month", "next month"],
-            ["poprzedni miesiąc", "następny miesiąc"],
-            ["Vormonat", "nächsten Monat"]
-        ],
-        table,
-        numberOfWeeks;
-    switch (lang) {
-    case undefined:
-    case "":
-    case "eng":
-        lang = 0;
-        break;
-    case "pl":
-        lang = 1;
-        break;
-    case "de":
-        lang = 2;
-        break;
-    default:
-        lang = 0;
-    }
-    if (dayOfWeek === 0) {
-        dayOfWeek = 7;
-    }
-    if (year % 4 === 0) {
-        endOfMonth[1] = 29;
-    }
-    endOfMonth.unshift("");
-    dayOfWeekName[lang].unshift("");
-    monthName[lang].unshift("");
 
-    /* table with all day of current month */
-    function tableOfDays(a, b, c) { // a - day, b - No. day in the week, c - month
-        var x, // day in the month
-            y; // day of the week
-        dayOfMonth = [];
-        dayOfMonth[0] = "";
-        for (x = a, y = b; x > 0; x -= 1, y -= 1) {
-            if (y === 0) {
-                y = 7;
-            }
-            dayOfMonth[x] = {
-                dayInMonth: x,
-                dayInWeek: y
-            };
-        }
-        for (x = a, y = b; x < endOfMonth[c] + 1; x += 1, y += 1) {
-            if (y === 8) {
-                y = 1;
-            }
-            dayOfMonth[x] = {
-                dayInMonth: x,
-                dayInWeek: y
-            };
-        }
-        return dayOfMonth;
-    }
-
-    function nOw() {
-        var i = 1;
-        if (dayOfMonth[1].dayInWeek !== 1) {
-            numberOfWeeks = 1;
-        } else {
-            numberOfWeeks = 0;
-        }
-        while (dayOfMonth[i]) {
-            if (dayOfMonth[i].dayInWeek === 1) {
-                numberOfWeeks += 1;
-            }
-            i += 1;
-        }
-        return numberOfWeeks;
-    }
-
-    function createCalendar(c) {
-        var trOn = "<tr>",
-            trOff = "</tr>",
-            monthHeader,
-            weekHeader = "",
-            content = "",
-            i = 1,
-            j = 1;
-        monthHeader = trOn + '<td class="monthHeader"  onclick="funcArray.prevMonth()" title="' + tableHeader[lang][0] + '"><i class="material-icons">navigate_before</i></td><td colspan="5" class="monthHeader" title="' + monthName[lang][c] + ', ' + year + '">' + monthName[lang][c] + ', ' + year + '</td><td class="monthHeader" onclick="funcArray.nextMonth()" title="' + tableHeader[lang][1] + '"><i class="material-icons">navigate_next</i></td>' + trOff;
-        while (dayOfWeekName[lang][i]) {
-            weekHeader += '<td class="weekDayName">' + dayOfWeekName[lang][i] + '</td>';
-            i += 1;
-        }
-        for (j; j < numberOfWeeks + 1; j += 1) {
-            content += trOn + '<td id="' + j + '-1"></td><td id="' + j + '-2"></td><td id="' + j + '-3"></td><td id="' + j + '-4"></td><td id="' + j + '-5"></td><td id="' + j + '-6"></td><td id="' + j + '-7"></td>' + trOff;
-        }
-        table = '<table class="calendar">' + monthHeader + trOn + weekHeader + trOff + content + "</table>";
-        return table;
-    }
-
-    function drawCalendar(c, ar) {
-        var a = 0, // number of week
-            b = 1; // number of day
-        if (dayOfMonth[1].dayInWeek !== 1) {
-            a = 1;
-        }
-        document.getElementById(ar).innerHTML = table;
-        for (b; b < endOfMonth[c] + 1; b += 1) {
-            if (dayOfMonth[b].dayInWeek === 1) {
-                a += 1;
-            }
-            document.getElementById(a + "-" + dayOfMonth[b].dayInWeek).innerHTML = dayOfMonth[b].dayInMonth;
-            document.getElementById(a + "-" + dayOfMonth[b].dayInWeek).className += "currentMonth";
-        }
-        if (month === d.getMonth() + 1 && year === d.getFullYear()) {
-            document.getElementsByClassName("currentMonth")[d.getDate() - 1].className += " today";
-        }
-    }
-
-    dayOfMonth = (tableOfDays(day, dayOfWeek, month));
-    numberOfWeeks = (nOw());
-    table = (createCalendar(month));
-    (drawCalendar(month, area));
-
-    function prevMonth() {
-        month = month - 1;
-        if (month === 0) {
-            month = 12;
-            year = year - 1;
-            if (year % 4 === 0) {
-                endOfMonth[2] = 29;
-            } else {
-                endOfMonth[2] = 28;
-            }
-        }
-        dayOfWeek = dayOfMonth[1].dayInWeek - 1;
-        if (dayOfWeek === 0) {
-            dayOfWeek = 7;
-        }
-        dayOfMonth = (tableOfDays(endOfMonth[month], dayOfWeek, month));
-        numberOfWeeks = (nOw());
-        table = (createCalendar(month));
-        (drawCalendar(month, area));
-    }
-
-    function nextMonth() {
-        dayOfWeek = dayOfMonth[(endOfMonth[month])].dayInWeek + 1;
-        if (dayOfWeek === 8) {
-            dayOfWeek = 1;
-        }
-        month = month + 1;
-        if (month === 13) {
-            month = 1;
-            year = year + 1;
-            if (year % 4 === 0) {
-                endOfMonth[2] = 29;
-            } else {
-                endOfMonth[2] = 28;
-            }
-        }
-        dayOfMonth = (tableOfDays(1, dayOfWeek, month));
-        numberOfWeeks = (nOw());
-        table = (createCalendar(month));
-        (drawCalendar(month, area));
-    }
-
-    /* window.onkeyup = function (e) {
-        var key;
-        if (e.keyCode) {
-            key = e.keyCode;
-        } else {
-            key = e.which;
-        }
-        if (key === 37) {
-            prevMonth();
-        } else if (key === 39) {
-            nextMonth();
-        }
-    }; */
-
-    funcArray = {
-        prevMonth: prevMonth,
-        nextMonth: nextMonth
+    const DAY_NAMES = {
+        eng: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+        pl: ["Pn", "Wt", "Śr", "Cz", "Pt", "So", "Nd"],
+        de: ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
     };
-}
+
+    const MONTH_NAMES = {
+        eng: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+        pl: ["Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec", "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień"],
+        de: ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"]
+    };
+
+    const LABELS = {
+        eng: {
+            previousMonth: "previous month",
+            nextMonth: "next month",
+            calendar: "Calendar",
+            chooseDate: "Choose date"
+        },
+        pl: {
+            previousMonth: "poprzedni miesiąc",
+            nextMonth: "następny miesiąc",
+            calendar: "Kalendarz",
+            chooseDate: "Wybierz datę"
+        },
+        de: {
+            previousMonth: "Vormonat",
+            nextMonth: "nächsten Monat",
+            calendar: "Kalender",
+            chooseDate: "Datum auswählen"
+        }
+    };
+
+    function isLeapYear(year) {
+        return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+    }
+
+    function getDaysInMonth(year, month) {
+        const days = [31, isLeapYear(year) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        return days[month - 1];
+    }
+
+    function resolveLanguage(lang) {
+        if (!lang || !DAY_NAMES[lang]) {
+            return "eng";
+        }
+        return lang;
+    }
+
+    function toMondayFirst(day) {
+        return day === 0 ? 7 : day;
+    }
+
+    function getMonthGrid(year, month) {
+        const firstWeekday = toMondayFirst(new Date(year, month - 1, 1).getDay());
+        const totalDays = getDaysInMonth(year, month);
+        const weeks = [];
+        let currentWeek = new Array(7).fill(null);
+
+        for (let day = 1; day <= totalDays; day += 1) {
+            const index = day === 1 ? firstWeekday - 1 : (firstWeekday + day - 2) % 7;
+            currentWeek[index] = day;
+
+            if (index === 6 || day === totalDays) {
+                weeks.push(currentWeek);
+                currentWeek = new Array(7).fill(null);
+            }
+        }
+
+        return weeks;
+    }
+
+    class Calendar {
+        constructor(lang, area, options) {
+            this.lang = resolveLanguage(lang);
+            this.options = options || {};
+            this.root = typeof area === "string" ? document.getElementById(area) : area;
+
+            if (!this.root) {
+                throw new Error('PickUpNewDate: target area "' + area + '" was not found.');
+            }
+
+            this.today = new Date();
+            this.currentMonth = this.today.getMonth() + 1;
+            this.currentYear = this.today.getFullYear();
+            this.handleKeydown = this.handleKeydown.bind(this);
+            this.render();
+        }
+
+        get monthName() {
+            return MONTH_NAMES[this.lang][this.currentMonth - 1];
+        }
+
+        get labels() {
+            return LABELS[this.lang];
+        }
+
+        prevMonth() {
+            if (this.currentMonth === 1) {
+                this.currentMonth = 12;
+                this.currentYear -= 1;
+            } else {
+                this.currentMonth -= 1;
+            }
+            this.render();
+        }
+
+        nextMonth() {
+            if (this.currentMonth === 12) {
+                this.currentMonth = 1;
+                this.currentYear += 1;
+            } else {
+                this.currentMonth += 1;
+            }
+            this.render();
+        }
+
+        selectDate(day) {
+            if (typeof this.options.onDateSelect === "function") {
+                this.options.onDateSelect(new Date(this.currentYear, this.currentMonth - 1, day));
+            }
+        }
+
+        handleKeydown(event) {
+            if (event.key === "ArrowLeft") {
+                event.preventDefault();
+                this.prevMonth();
+            } else if (event.key === "ArrowRight") {
+                event.preventDefault();
+                this.nextMonth();
+            }
+        }
+
+        createNavigationButton(icon, label, action) {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "calendarNavButton";
+            button.setAttribute("aria-label", label);
+            button.title = label;
+            button.addEventListener("click", action);
+
+            const iconNode = document.createElement("i");
+            iconNode.className = "material-icons";
+            iconNode.setAttribute("aria-hidden", "true");
+            iconNode.textContent = icon;
+            button.appendChild(iconNode);
+
+            return button;
+        }
+
+        createDayButton(day) {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "calendarDayButton";
+            button.textContent = day;
+            button.setAttribute("aria-label", this.labels.chooseDate + ": " + day + " " + this.monthName + " " + this.currentYear);
+
+            if (
+                day === this.today.getDate() &&
+                this.currentMonth === this.today.getMonth() + 1 &&
+                this.currentYear === this.today.getFullYear()
+            ) {
+                button.classList.add("today");
+                button.setAttribute("aria-current", "date");
+            }
+
+            button.addEventListener("click", () => {
+                this.selectDate(day);
+            });
+
+            return button;
+        }
+
+        render() {
+            const table = document.createElement("table");
+            const thead = document.createElement("thead");
+            const tbody = document.createElement("tbody");
+            const navRow = document.createElement("tr");
+            const daysRow = document.createElement("tr");
+            const weeks = getMonthGrid(this.currentYear, this.currentMonth);
+
+            table.className = "calendar";
+            table.setAttribute("role", "grid");
+            table.setAttribute("aria-label", this.labels.calendar + ": " + this.monthName + " " + this.currentYear);
+            table.tabIndex = 0;
+            table.addEventListener("keydown", this.handleKeydown);
+
+            const caption = document.createElement("caption");
+            caption.className = "calendarCaption";
+            caption.textContent = this.monthName + ", " + this.currentYear;
+            table.appendChild(caption);
+
+            const prevCell = document.createElement("td");
+            prevCell.className = "monthHeader";
+            prevCell.appendChild(this.createNavigationButton("navigate_before", this.labels.previousMonth, () => {
+                this.prevMonth();
+            }));
+
+            const titleCell = document.createElement("td");
+            titleCell.className = "monthHeader monthTitle";
+            titleCell.colSpan = 5;
+            titleCell.textContent = this.monthName + ", " + this.currentYear;
+            titleCell.title = this.monthName + ", " + this.currentYear;
+
+            const nextCell = document.createElement("td");
+            nextCell.className = "monthHeader";
+            nextCell.appendChild(this.createNavigationButton("navigate_next", this.labels.nextMonth, () => {
+                this.nextMonth();
+            }));
+
+            navRow.appendChild(prevCell);
+            navRow.appendChild(titleCell);
+            navRow.appendChild(nextCell);
+            thead.appendChild(navRow);
+
+            DAY_NAMES[this.lang].forEach((dayName) => {
+                const headerCell = document.createElement("th");
+                headerCell.className = "weekDayName";
+                headerCell.scope = "col";
+                headerCell.textContent = dayName;
+                daysRow.appendChild(headerCell);
+            });
+            thead.appendChild(daysRow);
+
+            weeks.forEach((week) => {
+                const row = document.createElement("tr");
+
+                week.forEach((day, index) => {
+                    const cell = document.createElement("td");
+                    cell.setAttribute("role", "gridcell");
+
+                    if (day) {
+                        cell.classList.add("currentMonth");
+                        if (index === 5) {
+                            cell.classList.add("weekend");
+                        }
+                        if (index === 6) {
+                            cell.classList.add("sunday");
+                        }
+                        cell.appendChild(this.createDayButton(day));
+                    } else {
+                        cell.classList.add("emptyDay");
+                        cell.setAttribute("aria-hidden", "true");
+                    }
+
+                    row.appendChild(cell);
+                });
+
+                tbody.appendChild(row);
+            });
+
+            table.appendChild(thead);
+            table.appendChild(tbody);
+
+            this.root.replaceChildren(table);
+        }
+    }
+
+    function pickUpNewDate(lang, area, options) {
+        return new Calendar(lang, area, options);
+    }
+
+    global.pickUpNewDate = pickUpNewDate;
+
+    if (typeof module !== "undefined" && module.exports) {
+        module.exports = {
+            Calendar,
+            DAY_NAMES,
+            MONTH_NAMES,
+            LABELS,
+            getDaysInMonth,
+            getMonthGrid,
+            isLeapYear,
+            pickUpNewDate,
+            resolveLanguage
+        };
+    }
+}(typeof window !== "undefined" ? window : globalThis));
