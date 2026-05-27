@@ -1,14 +1,13 @@
-const test = require("node:test");
-const assert = require("node:assert/strict");
+import assert from "node:assert/strict";
+import test from "node:test";
 
-const {
+import pickUpNewDate, {
     DAY_NAMES,
     getDaysInMonth,
     getMonthGrid,
     isLeapYear,
-    pickUpNewDate,
     resolveLanguage
-} = require("./calendar.js");
+} from "./src/index.js";
 
 test("isLeapYear handles Gregorian leap year rules", () => {
     assert.equal(isLeapYear(2000), true);
