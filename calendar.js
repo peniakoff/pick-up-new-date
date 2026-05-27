@@ -238,7 +238,7 @@
                     if (day) {
                         cell.classList.add("currentMonth");
                         if (index === 5) {
-                            cell.classList.add("weekend");
+                            cell.classList.add("saturday");
                         }
                         if (index === 6) {
                             cell.classList.add("sunday");

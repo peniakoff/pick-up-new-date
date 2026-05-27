@@ -103,7 +103,7 @@ table.calendar td.currentMonth:last-child {
     background-color: #F48FB1;
 }
 
-table.calendar td.currentMonth.weekend {
+table.calendar td.currentMonth.saturday {
     background-color: #FFF59D;
 }
 
@@ -126,14 +126,10 @@ table.calendar td.currentMonth .calendarDayButton.today {
     background-color: #B39DDB;
 }
 
-table.calendar tr:nth-child(1n+3) td.currentMonth:hover:not(.sunday):not(.weekend) {
+table.calendar tr:nth-child(1n+3) td.currentMonth:hover {
     background-color: #FF7043;
     cursor: pointer;
     transition: box-shadow 0.1s;
-}
-
-table.calendar tr:nth-child(1n+3) td.currentMonth:hover .calendarDayButton:not(.today) {
-    background-color: #FF7043;
 }
 
 table.calendar tr:nth-child(1n+3) td.currentMonth:active {

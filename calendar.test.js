@@ -41,7 +41,7 @@ test("getMonthGrid returns stable monday-first month layouts", () => {
     ]);
 });
 
-test("repeated helpers do not mutate shared dictionaries", () => {
+test("getMonthGrid does not mutate DAY_NAMES constants", () => {
     getMonthGrid(2024, 2);
     getMonthGrid(2024, 2);
     assert.equal(DAY_NAMES.eng.length, 7);
