@@ -2,6 +2,8 @@ import { pickUpNewDate } from "./index.js";
 
 const globalTarget = typeof window !== "undefined" ? window : globalThis;
 
-globalTarget.pickUpNewDate = pickUpNewDate;
+if (typeof globalTarget.pickUpNewDate === "undefined") {
+    globalTarget.pickUpNewDate = pickUpNewDate;
+}
 
 export { pickUpNewDate };
