@@ -17,7 +17,18 @@ For the first release, you can add the trusted publisher before publishing; npm 
 
 ## Release process
 
-1. Ensure `package.json` `version` matches the release you are shipping (e.g. `1.0.0`).
+### v1.0.0 (tag already on GitHub)
+
+The `v1.0.0` git tag is on `origin`. To publish to npm:
+
+1. Complete **One-time npm setup** below (2FA + Trusted Publisher for `peniakoff/pick-up-new-date`).
+2. Open [GitHub Releases](https://github.com/peniakoff/pick-up-new-date/releases/new), choose tag `v1.0.0`, add release notes, and click **Publish release** (not draft).
+3. Confirm the [Publish workflow](https://github.com/peniakoff/pick-up-new-date/actions/workflows/publish.yml) succeeds.
+4. Run `npm view pickupnewdate` and install the package to verify.
+
+### Later releases
+
+1. Ensure `package.json` `version` matches the release you are shipping (e.g. `1.0.1`).
 2. Merge changes to `main` and confirm the **CI** workflow passes.
 3. Create and push a git tag: `git tag v1.0.0 && git push origin v1.0.0`
 4. On GitHub: **Releases** → **Draft a new release** → choose tag `v1.0.0` → **Publish release** (not draft).
