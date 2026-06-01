@@ -1,5 +1,8 @@
 # PickUpNewDate
 
+[![npm version](https://img.shields.io/npm/v/pickupnewdate.svg)](https://www.npmjs.com/package/pickupnewdate)
+[![CI](https://github.com/peniakoff/pick-up-new-date/actions/workflows/ci.yml/badge.svg)](https://github.com/peniakoff/pick-up-new-date/actions/workflows/ci.yml)
+
 The calendar. It's not complicated. It has to be simple. That's all.
 
 The simple project of calendar written in JavaScript, CSS and HTML. It's also (potentially) Google Material styled. The calendar supports English, Polish and German.
@@ -8,6 +11,8 @@ It supports keyboard navigation with left/right arrows, multiple calendar instan
 <strong>If you have any questions or suggestions - look at my GitHub account and contact me!</strong>
 
 ## Installation
+
+Published on [npm](https://www.npmjs.com/package/pickupnewdate) as `pickupnewdate`.
 
 ```bash
 npm install pickupnewdate

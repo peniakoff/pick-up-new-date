@@ -10,14 +10,35 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       id-token: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           registry-url: https://registry.npmjs.org
-          cache: npm
+          package-manager-cache: false
+      - name: Use npm with trusted publishing support
+        run: npm install -g npm@11
       - run: npm ci
       - run: npm publish --provenance --access public
+      - name: Link GitHub release to npm package
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          TAG="${{ github.event.release.tag_name }}"
+          NPM_URL="https://www.npmjs.com/package/pickupnewdate/v/${VERSION}"
+          BODY=$(gh release view "$TAG" --json body -q .body)
+          if echo "$BODY" | grep -q 'registry.npmjs.org/pickupnewdate'; then
+            echo "Release already links to npm."
+            exit 0
+          fi
+          gh release edit "$TAG" --notes "${BODY}
+
+---
+
+📦 **npm:** ${NPM_URL}"
+          echo "Updated release ${TAG} with ${NPM_URL}"

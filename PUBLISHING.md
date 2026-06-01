@@ -2,18 +2,71 @@
 
 This package is published automatically when a GitHub Release is published.
 
+## GitHub ↔ npm visibility
+
+GitHub does **not** list versions from [registry.npmjs.org](https://registry.npmjs.org) in the repository **Packages** tab (that tab is for GitHub Packages only). Integration works like this:
+
+| Where | What you see |
+|-------|----------------|
+| [npm package page](https://www.npmjs.com/package/pickupnewdate) | Link to GitHub repo (from `package.json` `repository`) |
+| [GitHub Releases](https://github.com/peniakoff/pick-up-new-date/releases) | Link to npm added by `publish.yml` after a successful CI publish |
+| [README](README.md) | npm version badge → current release on npm |
+| npm (after CI publish with trusted publishing) | Green provenance check → links to workflow run and commit on GitHub |
+
+The **Packages** sidebar on GitHub will stay empty unless you also publish to GitHub Packages — that is expected.
+
 ## One-time npm setup
 
 1. Sign in at [npmjs.com](https://www.npmjs.com) with an account that can publish `pickupnewdate`.
 2. Enable **two-factor authentication** (required for `npm publish`).
-3. Configure a **Trusted Publisher** (OIDC, no long-lived `NPM_TOKEN` needed):
-   - Open [npm Access Tokens](https://www.npmjs.com/settings/~your-username/tokens) → **Trusted Publishers** → **Add**
-   - Provider: **GitHub Actions**
-   - Repository: `peniakoff/pick-up-new-date` (must match this GitHub repo)
-   - Workflow filename: `publish.yml`
-   - Environment: leave empty (unless you add a GitHub Environment named `release`)
+3. Configure **Trusted publishing** (OIDC). This is **not** under account “Access Tokens”.
 
-For the first release, add the trusted publisher **before** publishing. Without it, `npm publish` from Actions often fails with `404 Not Found` on the first `PUT` to the registry.
+   **Step 1 — Create the package on npm (required once):**
+
+   `npm trust` only works if the package already exists on the registry.
+
+   ```bash
+   npm login   # if needed
+   npm run test:build
+   npm publish --access public
+   ```
+
+   Provenance is enabled only in CI (`publish.yml` uses `--provenance`). Do not set `"provenance": true` in `publishConfig` — local publish would fail with `provider: null`.
+
+   **Step 2 — Enable trusted publishing for GitHub Actions**
+
+   **Option A — Website (most reliable):**
+
+   Open https://www.npmjs.com/package/pickupnewdate/access (you must be logged in as the package owner).
+
+   Under **Publishing access** → **Add a trusted publisher** → **GitHub Actions**, set:
+
+   | Field | Value |
+   |-------|--------|
+   | Organization or user | `peniakoff` |
+   | Repository | `pick-up-new-date` |
+   | Workflow filename | `publish.yml` |
+   | Environment | _(leave empty)_ |
+
+   Save. If the UI offers allowed actions, enable **npm publish**.
+
+   **Option B — CLI (npm ≥ 11.10):**
+
+   Complete 2FA in the browser when prompted, or pass an app OTP:
+
+   ```bash
+   npm trust github pickupnewdate \
+     --file=publish.yml \
+     --repository=peniakoff/pick-up-new-date \
+     --otp=123456 \
+     -y
+   ```
+
+   If you get `400 Bad Request` on `/-/package/pickupnewdate/trust`, use Option A or retry after `npm login` and a fresh OTP.
+
+   After Step 2, future releases can use GitHub Actions (`gh workflow run publish.yml` or a published GitHub Release).
+
+Without trusted publishing configured, `npm publish` from Actions fails with `404 Not Found` on the first `PUT` to the registry.
 
 ### Retry after fixing npm setup
 
