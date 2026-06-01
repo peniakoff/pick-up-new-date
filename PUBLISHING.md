@@ -13,7 +13,15 @@ This package is published automatically when a GitHub Release is published.
    - Workflow filename: `publish.yml`
    - Environment: leave empty (unless you add a GitHub Environment named `release`)
 
-For the first release, you can add the trusted publisher before publishing; npm will link it to the package on the first successful publish from that workflow.
+For the first release, add the trusted publisher **before** publishing. Without it, `npm publish` from Actions often fails with `404 Not Found` on the first `PUT` to the registry.
+
+### Retry after fixing npm setup
+
+```bash
+gh workflow run publish.yml
+# or re-run the failed job:
+gh run rerun --failed
+```
 
 ## Release process
 
