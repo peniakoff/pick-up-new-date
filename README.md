@@ -15,9 +15,33 @@ npm install pickupnewdate
 
 ## Usage
 
-### Browser
+### CDN (unpkg / jsDelivr)
 
-Build the distributable files first:
+Pin a version in production (example: `1.0.0`):
+
+```html
+<div id="calendar"></div>
+<link rel="stylesheet" href="https://unpkg.com/pickupnewdate@1.0.0/dist/pickupnewdate.css">
+<script src="https://unpkg.com/pickupnewdate@1.0.0/dist/pickupnewdate.umd.js"></script>
+<script>
+    pickUpNewDate("eng", "calendar", {
+        onDateSelect: function (date) {
+            console.log(date.toISOString());
+        }
+    });
+</script>
+```
+
+jsDelivr uses the same paths, for example `https://cdn.jsdelivr.net/npm/pickupnewdate@1.0.0/dist/pickupnewdate.umd.js`.
+
+The UMD bundle exposes:
+
+- `pickUpNewDate` on `window` (and `globalThis`) for script tags
+- `PickUpNewDate.pickUpNewDate` as the named export on the UMD namespace
+
+### Browser (local / bundled)
+
+After installing from npm or building from source:
 
 ```bash
 npm run build
@@ -25,8 +49,8 @@ npm run build
 
 ```html
 <div id="calendar"></div>
-<link rel="stylesheet" href="dist/pickupnewdate.css">
-<script src="dist/pickupnewdate.umd.js"></script>
+<link rel="stylesheet" href="node_modules/pickupnewdate/dist/pickupnewdate.css">
+<script src="node_modules/pickupnewdate/dist/pickupnewdate.umd.js"></script>
 <script>
     pickUpNewDate("eng", "calendar", {
         onDateSelect: function (date) {
@@ -107,3 +131,7 @@ To verify the generated artifacts as well:
 ```bash
 npm run test:build
 ```
+
+## Publishing
+
+Releases are published to npm via GitHub Actions when a GitHub Release is published. See [PUBLISHING.md](PUBLISHING.md) for npm trusted publisher setup and the release checklist.

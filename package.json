@@ -33,7 +33,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/peniakoff/PickUpNewDate.git"
+    "url": "git+https://github.com/peniakoff/pick-up-new-date.git"
   },
   "keywords": [
     "calendar",
@@ -43,10 +43,22 @@
   "author": "Tomasz Miller",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/peniakoff/PickUpNewDate/issues"
+    "url": "https://github.com/peniakoff/pick-up-new-date/issues"
   },
-  "homepage": "https://github.com/peniakoff/PickUpNewDate#readme",
+  "homepage": "https://github.com/peniakoff/pick-up-new-date#readme",
   "style": "./dist/pickupnewdate.css",
+  "engines": {
+    "node": ">=18"
+  },
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "unpkg": "dist/pickupnewdate.umd.js",
+  "jsdelivr": "dist/pickupnewdate.umd.js",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "devDependencies": {
     "@rollup/plugin-terser": "^1.0.0",
     "rollup": "^4.60.4"
