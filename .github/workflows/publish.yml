@@ -13,7 +13,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       id-token: write
     steps:
       - uses: actions/checkout@v4
@@ -78,3 +78,28 @@ jobs:
           echo "  git push origin :refs/tags/${GITHUB_REF_NAME}"
           echo "  git tag -f ${GITHUB_REF_NAME} ${GITHUB_SHA}"
           echo "  git push origin ${GITHUB_REF_NAME}"
+
+      - name: Create or update GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          TAG="${GITHUB_REF_NAME}"
+          NPM_URL="https://www.npmjs.com/package/pickupnewdate/v/${VERSION}"
+          NPM_LINE=$'\n\n---\n\n📦 **npm:** '"${NPM_URL}"
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            BODY=$(gh release view "$TAG" --json body -q .body)
+            if echo "$BODY" | grep -q 'registry.npmjs.org/pickupnewdate'; then
+              echo "Release ${TAG} already links to npm."
+              exit 0
+            fi
+            gh release edit "$TAG" --notes "${BODY}${NPM_LINE}"
+          else
+            NOTES=$(git log "$(git describe --tags --abbrev=0 "${TAG}^" 2>/dev/null || echo HEAD)".."${TAG}" --pretty=format:'- %s' --no-merges 2>/dev/null | head -20 || true)
+            if [ -z "$NOTES" ]; then
+              NOTES="- Release ${VERSION}"
+            fi
+            gh release create "$TAG" --title "$TAG" --notes "${NOTES}${NPM_LINE}"
+          fi
+          echo "GitHub Release ${TAG} is up to date."

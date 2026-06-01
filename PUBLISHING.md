@@ -17,7 +17,7 @@ GitHub does **not** list versions from [registry.npmjs.org](https://registry.npm
 
 The **Packages** sidebar on GitHub will stay empty unless you also publish to GitHub Packages — that is expected.
 
-Optional [GitHub Releases](https://github.com/peniakoff/pick-up-new-date/releases) are for changelog only; they are not required for npm.
+After a successful tag publish, the **Publish** workflow also creates or updates the matching [GitHub Release](https://github.com/peniakoff/pick-up-new-date/releases) (changelog from commits since the previous tag, plus an npm link). Releases are not the publish trigger—only the tag push is.
 
 ## One-time npm setup (required before CI publish works)
 
