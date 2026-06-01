@@ -5,10 +5,69 @@
 
 The calendar. It's not complicated. It has to be simple. That's all.
 
-The simple project of calendar written in JavaScript, CSS and HTML. It's also (potentially) Google Material styled. The calendar supports English, Polish and German.
-It supports keyboard navigation with left/right arrows, multiple calendar instances on one page and an optional date selection callback.
+Lightweight **monthly date picker** written in TypeScript, CSS and HTML (Material-inspired styling). Supports English, Polish and German, keyboard navigation, accessibility features, and headless integration for React, Vue, or Next.js.
 
-<strong>If you have any questions or suggestions - look at my GitHub account and contact me!</strong>
+**If you have any questions or suggestions — look at my GitHub account and contact me!**
+
+## Features
+
+### Calendar view and navigation
+
+- **Month grid** — Monday-first week layout (`getMonthGrid`, `getCalendarViewModel`)
+- **Previous / next month** — header buttons and keyboard arrows
+- **Year bounds** — navigation limited to years **1–9999**; buttons disabled at min/max
+- **Today** — highlighted day with `aria-current="date"`
+- **Weekends** — Saturday and Sunday cells styled differently (`.saturday`, `.sunday`)
+- **Multiple instances** — call `pickUpNewDate()` several times for separate widgets on one page
+
+### Date selection
+
+- **`onDateSelect(date)`** — callback when a day is clicked (local `Date` object)
+- **`initialDate`** — open on a given month and pre-select that day
+- **Selected state** — visible highlight (`.selected`) and `aria-selected="true"`
+- **`getSelectedDate()`** — read the current selection (`null` if none)
+- **`goToDate(year, month, day?)`** — jump to a month; optionally select a day and fire `onDateSelect`
+
+### Instance lifecycle and events
+
+- **`destroy()`** — remove listeners and clear the mount element
+- **`onMonthChange(year, month)`** — fired after month navigation (`prevMonth` / `nextMonth` / `goToDate`)
+
+### Internationalization
+
+- Built-in languages: **`eng`**, **`pl`**, **`de`**
+- **`resolveLanguage(lang)`** — normalizes language code; unsupported values fall back to `eng` (with a console warning)
+- Exported constants: `DAY_NAMES`, `MONTH_NAMES`, `LABELS`
+
+### Headless / framework usage
+
+- **`getCalendarViewModel(year, month, lang?)`** — frozen view model (weeks, labels, month name) for custom UI in React, Vue, Next.js, etc.
+- **`isLeapYear`**, **`getDaysInMonth`**, **`canNavigateToMonth`** — date helpers with input validation
+- **`options.document`** — inject a minimal DOM adapter for SSR or Node tests
+
+### Accessibility
+
+- ARIA: `role="grid"`, labels on navigation and day buttons, hidden caption for screen readers
+- **`aria-live="polite"`** region announces the current month when it changes
+- **Keyboard**: ← / → change month (including when focus is on a day button); arrow keys move focus between days in the grid
+- **`:focus-visible`** styles on interactive controls
+- **`prefers-reduced-motion`** — transitions disabled when the user prefers reduced motion
+
+### Security and data integrity
+
+- Year and month validated with explicit `RangeError` messages
+- Language dictionaries deep-frozen (`deepFreeze`) to prevent accidental mutation
+- DOM built with **`textContent`** and **`setAttribute`** only (no `innerHTML`)
+
+### Distribution and TypeScript
+
+- **ESM**, **CommonJS**, **UMD** bundles plus **`pickupnewdate/style.css`**
+- TypeScript sources with **strict** checking; types published as **`dist/index.d.ts`** after `npm run build`
+- Responsive layout for viewports ≤ 640px
+
+### Not included (see roadmap)
+
+Event CRUD, recurrence, iCal sync, notifications, shared calendars, range/time pickers, `minDate`/`maxDate`, configurable week start, RTL, dark theme, and touch swipe are **not** implemented yet. Planned items are listed in [FEATURE_BACKLOG.md](FEATURE_BACKLOG.md).
 
 ## Installation
 
@@ -31,7 +90,7 @@ Pin a version in production (example: `1.0.0`):
 <script>
     pickUpNewDate("eng", "calendar", {
         onDateSelect: function (date) {
-            console.log(date.toISOString());
+            console.log(date.getFullYear(), date.getMonth() + 1, date.getDate());
         }
     });
 </script>
@@ -57,15 +116,23 @@ npm run build
 <link rel="stylesheet" href="node_modules/pickupnewdate/dist/pickupnewdate.css">
 <script src="node_modules/pickupnewdate/dist/pickupnewdate.umd.js"></script>
 <script>
-    pickUpNewDate("eng", "calendar", {
+    const calendar = pickUpNewDate("pl", "calendar", {
+        initialDate: new Date(2026, 5, 15),
         onDateSelect: function (date) {
-            console.log(date.toISOString());
+            console.log(date.getFullYear(), date.getMonth() + 1, date.getDate());
+        },
+        onMonthChange: function (year, month) {
+            console.log("Month:", year, month);
         }
     });
+
+    // later: calendar.goToDate(2026, 12, 1);
+    // calendar.destroy();
 </script>
 ```
 
 Supported languages:
+
 - `eng`
 - `pl`
 - `de`
@@ -94,22 +161,66 @@ Use the framework-agnostic model generator and render your own UI:
 import { getCalendarViewModel } from "pickupnewdate";
 
 const model = getCalendarViewModel(2026, 5, "eng");
+// model.weeks, model.dayNames, model.labels, model.monthName, ...
 ```
 
-In SSR/non-browser environments, initialize DOM rendering only on client side, or pass a custom document adapter via `options.document`.
+In SSR/non-browser environments, initialize DOM rendering only on the client, or pass a custom document adapter via `options.document`.
 
 ## API Reference
 
-The package exports:
+### Factory and class
 
-- `pickUpNewDate(lang, area, options)` - creates and renders a calendar instance
-- `Calendar` - calendar class for manual instantiation
-- `DAY_NAMES`, `MONTH_NAMES`, `LABELS` - language-specific labels and names
-- `isLeapYear(year)` - Gregorian leap year helper
-- `getDaysInMonth(year, month)` - month length helper
-- `getMonthGrid(year, month)` - Monday-first calendar grid builder
-- `getCalendarViewModel(year, month, lang)` - headless data model for framework rendering
-- `resolveLanguage(lang)` - returns a supported language code or falls back to `eng`
+| Export | Description |
+|--------|-------------|
+| `pickUpNewDate(lang, area, options?)` | Creates a `Calendar` instance and renders into `area` (element id or `HTMLElement`) |
+| `Calendar` | Class for direct instantiation with the same constructor signature |
+
+### `Calendar` instance methods
+
+| Method | Description |
+|--------|-------------|
+| `prevMonth()` | Go to previous month (no-op at year 1, month 1) |
+| `nextMonth()` | Go to next month (no-op at year 9999, month 12) |
+| `selectDate(day)` | Select a day in the current month (updates UI, calls `onDateSelect`) |
+| `goToDate(year, month, day?)` | Navigate to month; if `day` is given, select it and call `onDateSelect` |
+| `getSelectedDate()` | `Date` copy of selection, or `null` |
+| `destroy()` | Tear down listeners and clear the mount node |
+| `render()` | Re-render the month grid (usually called internally) |
+| `canGoPrev()` / `canGoNext()` | Whether month navigation is allowed within 1–9999 |
+
+### `Calendar` instance properties
+
+| Property | Description |
+|----------|-------------|
+| `currentYear`, `currentMonth` | Visible month (month is 1–12) |
+| `lang` | Resolved language code (`eng` \| `pl` \| `de`) |
+| `options` | Constructor options |
+| `labels`, `monthName` | Localized strings for the current view |
+
+### Headless helpers
+
+| Export | Description |
+|--------|-------------|
+| `getCalendarViewModel(year, month, lang?)` | Frozen view model for custom rendering |
+| `getMonthGrid(year, month)` | Monday-first grid of day numbers (`null` = empty cell) |
+| `getDaysInMonth(year, month)` | Days in month (handles leap years) |
+| `isLeapYear(year)` | Gregorian leap-year check |
+| `canNavigateToMonth(year, month)` | `true` if year/month pass validation |
+| `validateYear(year)` / `validateMonth(month)` | Throw `RangeError` if invalid |
+| `resolveLanguage(lang?)` | Supported language or `eng` fallback |
+| `DAY_NAMES`, `MONTH_NAMES`, `LABELS` | Frozen i18n tables |
+| `MIN_YEAR`, `MAX_YEAR` | `1` and `9999` |
+
+### `CalendarOptions`
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `onDateSelect` | `(date: Date) => void` | Called when user selects a day |
+| `onMonthChange` | `(year: number, month: number) => void` | Called after month changes |
+| `initialDate` | `Date` | Initial visible month and selected day |
+| `document` | `DocumentAdapter` | Custom `getElementById` / `createElement` for SSR or tests |
+
+TypeScript types are published from `dist/index.d.ts` after `npm run build`.
 
 ## Security and data integrity
 
@@ -117,25 +228,28 @@ The package exports:
 - Internal language dictionaries (`DAY_NAMES`, `MONTH_NAMES`, `LABELS`) are deep-frozen to prevent runtime mutation.
 - Rendering uses safe DOM APIs (`textContent`, `setAttribute`) and does not use `innerHTML`.
 
-## Testing
+## Development
 
-Build the package with:
+Source code lives in `src/` as TypeScript. Build and type-check:
 
 ```bash
 npm run build
+npm run typecheck
 ```
 
-Run the automated tests with:
+Run tests (TypeScript via `tsx`):
 
 ```bash
 npm test
 ```
 
-To verify the generated artifacts as well:
+Full verification (build, types, tests):
 
 ```bash
 npm run test:build
 ```
+
+See [FEATURE_BACKLOG.md](FEATURE_BACKLOG.md) for planned enhancements.
 
 ## Publishing
 

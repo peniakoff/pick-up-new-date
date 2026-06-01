@@ -22,6 +22,7 @@ jobs:
       - name: Use npm with trusted publishing support
         run: npm install -g npm@11
       - run: npm ci
+      - run: npm run test:build
       - run: npm publish --provenance --access public
       - name: Link GitHub release to npm package
         if: github.event_name == 'release'
