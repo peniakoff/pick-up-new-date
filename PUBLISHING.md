@@ -1,6 +1,8 @@
 # Publishing to npm
 
-This package is published automatically when a GitHub Release is published.
+This package is published **only** when a semver git tag `v*` is pushed to GitHub and that tag points at a commit on **`master`**.
+
+Pushing a tag is the sole release trigger. GitHub Releases and manual workflow runs do **not** publish to npm.
 
 ## GitHub ↔ npm visibility
 
@@ -9,19 +11,21 @@ GitHub does **not** list versions from [registry.npmjs.org](https://registry.npm
 | Where | What you see |
 |-------|----------------|
 | [npm package page](https://www.npmjs.com/package/pickupnewdate) | Link to GitHub repo (from `package.json` `repository`) |
-| [GitHub Releases](https://github.com/peniakoff/pick-up-new-date/releases) | Link to npm added by `publish.yml` after a successful CI publish |
+| [GitHub Actions — Publish](https://github.com/peniakoff/pick-up-new-date/actions/workflows/publish.yml) | Runs on each `v*` tag push |
 | [README](README.md) | npm version badge → current release on npm |
 | npm (after CI publish with trusted publishing) | Green provenance check → links to workflow run and commit on GitHub |
 
 The **Packages** sidebar on GitHub will stay empty unless you also publish to GitHub Packages — that is expected.
 
-## One-time npm setup
+Optional [GitHub Releases](https://github.com/peniakoff/pick-up-new-date/releases) are for changelog only; they are not required for npm.
+
+## One-time npm setup (required before CI publish works)
 
 1. Sign in at [npmjs.com](https://www.npmjs.com) with an account that can publish `pickupnewdate`.
 2. Enable **two-factor authentication** (required for `npm publish`).
 3. Configure **Trusted publishing** (OIDC). This is **not** under account “Access Tokens”.
 
-   **Step 1 — Create the package on npm (required once):**
+   **Step 1 — Create the package on npm (required once if the package does not exist yet):**
 
    `npm trust` only works if the package already exists on the registry.
 
@@ -64,43 +68,59 @@ The **Packages** sidebar on GitHub will stay empty unless you also publish to Gi
 
    If you get `400 Bad Request` on `/-/package/pickupnewdate/trust`, use Option A or retry after `npm login` and a fresh OTP.
 
-   After Step 2, future releases can use GitHub Actions (`gh workflow run publish.yml` or a published GitHub Release).
+   After Step 2, each new `v*` tag push on `master` can publish via GitHub Actions.
 
-Without trusted publishing configured, `npm publish` from Actions fails with `404 Not Found` on the first `PUT` to the registry.
+Without trusted publishing configured, `npm publish` from Actions fails (often `404 Not Found` on the first `PUT` to the registry).
 
 ### Retry after fixing npm setup
 
+Re-push the tag so the Publish workflow runs again:
+
 ```bash
-gh workflow run publish.yml
-# or re-run the failed job:
-gh run rerun --failed
+git push origin :refs/tags/v1.1.0
+git tag -f v1.1.0 <commit-on-master>
+git push origin v1.1.0
 ```
+
+Or bump `package.json`, create a new tag (e.g. `v1.1.1`), and push it.
 
 ## Release process
 
-### v1.0.0 (tag already on GitHub)
+1. Merge changes into **`master`** and confirm the **CI** workflow passes.
+2. Set `"version"` in `package.json` to the version you are shipping (e.g. `1.1.0`).
+3. Commit and push `master`.
+4. Create and push a tag whose name matches the version:
 
-The `v1.0.0` git tag is on `origin`. To publish to npm:
+   ```bash
+   git tag v1.1.0
+   git push origin v1.1.0
+   ```
 
-1. Complete **One-time npm setup** below (2FA + Trusted Publisher for `peniakoff/pick-up-new-date`).
-2. Open [GitHub Releases](https://github.com/peniakoff/pick-up-new-date/releases/new), choose tag `v1.0.0`, add release notes, and click **Publish release** (not draft).
-3. Confirm the [Publish workflow](https://github.com/peniakoff/pick-up-new-date/actions/workflows/publish.yml) succeeds.
-4. Run `npm view pickupnewdate` and install the package to verify.
+   Or use npm’s version helper on `master`:
 
-### Later releases
+   ```bash
+   npm version patch   # or minor / major
+   git push origin master --follow-tags
+   ```
 
-1. Ensure `package.json` `version` matches the release you are shipping (e.g. `1.0.1`).
-2. Merge changes to `main` and confirm the **CI** workflow passes.
-3. Create and push a git tag: `git tag v1.0.0 && git push origin v1.0.0`
-4. On GitHub: **Releases** → **Draft a new release** → choose tag `v1.0.0` → **Publish release** (not draft).
-5. The **Publish** workflow runs `npm publish --provenance --access public`.
-6. Verify: `npm view pickupnewdate` and `npm install pickupnewdate`.
+5. The **Publish** workflow validates the tag, runs tests, and runs `npm publish --provenance --access public`.
+6. Verify: `npm view pickupnewdate version` and `npm install pickupnewdate`.
 
-## Subsequent versions
+### Workflow checks
 
-```bash
-npm version patch   # or minor / major
-git push origin main --follow-tags
-```
+| Check | Failure means |
+|-------|----------------|
+| Tag format `vMAJOR.MINOR.PATCH` | Use e.g. `v1.1.0`, not `v1.1.0-beta` |
+| Tag commit is on `master` | Tag a commit that has been merged to `master` |
+| Tag `vX.Y.Z` = `package.json` `version` `X.Y.Z` | Bump `package.json` before tagging |
+| Version not already on npm | Re-push is skipped safely if already published |
 
-Then create a GitHub Release for the new tag and publish it.
+## Troubleshooting
+
+| Symptom | Likely cause |
+|---------|----------------|
+| Tag pushed, no Publish workflow | Tag name does not match `v*` or workflow not on default branch yet |
+| Publish fails on `npm publish` | Trusted publishing not configured (see above) |
+| `Tag does not match package.json` | `git tag v1.1.0` but `package.json` still says `1.0.0` |
+| `Tag must point to master` | Tag created on another branch’s tip |
+| Tag push does nothing second time | GitHub does not re-run; delete and re-push the tag (see retry above) |

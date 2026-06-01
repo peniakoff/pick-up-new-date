@@ -253,4 +253,4 @@ See [FEATURE_BACKLOG.md](FEATURE_BACKLOG.md) for planned enhancements.
 
 ## Publishing
 
-Releases are published to npm via GitHub Actions when a GitHub Release is published. See [PUBLISHING.md](PUBLISHING.md) for npm trusted publisher setup and the release checklist.
+Releases are published to npm when a semver tag (`v*`) is pushed on **`master`** (GitHub Actions). See [PUBLISHING.md](PUBLISHING.md) for trusted publisher setup and the release checklist.
