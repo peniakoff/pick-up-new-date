@@ -1,4 +1,4 @@
-import { getCalendarViewModel, getDaysInMonth, resolveLanguage, validateMonth, validateYear } from "./core.js";
+import { createLocalDate, getCalendarViewModel, getDaysInMonth, resolveLanguage, validateMonth, validateYear } from "./core.js";
 import type { CalendarOptions, CalendarRoot, DocumentAdapter } from "./types.js";
 import { MAX_YEAR, MIN_YEAR } from "./types.js";
 
@@ -49,7 +49,7 @@ export class Calendar {
             validateMonth(initial.getMonth() + 1);
             this.currentYear = initial.getFullYear();
             this.currentMonth = initial.getMonth() + 1;
-            this.selectedDate = new Date(initial.getFullYear(), initial.getMonth(), initial.getDate());
+            this.selectedDate = createLocalDate(initial.getFullYear(), initial.getMonth() + 1, initial.getDate());
         }
 
         this.handleRootKeydown = (event: KeyboardEvent) => {
@@ -102,7 +102,7 @@ export class Calendar {
                     `PickUpNewDate: day must be an integer between 1 and ${maxDay} for ${year}-${month}.`
                 );
             }
-            this.selectedDate = new Date(year, month - 1, day);
+            this.selectedDate = createLocalDate(year, month, day);
             this.options.onDateSelect?.(new Date(this.selectedDate));
         }
 
@@ -156,7 +156,7 @@ export class Calendar {
 
     selectDate(day: number): void {
         this.assertNotDestroyed();
-        this.selectedDate = new Date(this.currentYear, this.currentMonth - 1, day);
+        this.selectedDate = createLocalDate(this.currentYear, this.currentMonth, day);
         this.options.onDateSelect?.(new Date(this.selectedDate));
         this.render();
     }
@@ -352,40 +352,44 @@ export class Calendar {
             return false;
         }
 
-        let nextRow = row;
-        let nextCol = col;
+        let dRow = 0;
+        let dCol = 0;
 
         switch (key) {
             case "ArrowLeft":
-                nextCol -= 1;
+                dCol = -1;
                 break;
             case "ArrowRight":
-                nextCol += 1;
+                dCol = 1;
                 break;
             case "ArrowUp":
-                nextRow -= 1;
+                dRow = -1;
                 break;
             case "ArrowDown":
-                nextRow += 1;
+                dRow = 1;
                 break;
             default:
                 return false;
         }
-
-        if (nextCol < 0 || nextCol > 6 || nextRow < 0 || nextRow >= weeks.length) {
-            return false;
+        let nextRow = row;
+        let nextCol = col;
+        const maxSteps = weeks.length * 7;
+        for (let step = 0; step < maxSteps; step += 1) {
+            nextRow += dRow;
+            nextCol += dCol;
+            if (nextCol < 0 || nextCol > 6 || nextRow < 0 || nextRow >= weeks.length) {
+                return false;
+            }
+            const nextDay = weeks[nextRow]?.[nextCol];
+            if (nextDay !== null && nextDay !== undefined) {
+                const button = this.root.querySelector<HTMLButtonElement>(
+                    `button.calendarDayButton[data-day="${nextDay}"]`
+                );
+                button?.focus();
+                return true;
+            }
         }
-
-        const nextDay = weeks[nextRow]?.[nextCol];
-        if (nextDay === null || nextDay === undefined) {
-            return false;
-        }
-
-        const button = this.root.querySelector<HTMLButtonElement>(
-            `button.calendarDayButton[data-day="${nextDay}"]`
-        );
-        button?.focus();
-        return true;
+        return false;
     }
 
     private createNavigationButton(

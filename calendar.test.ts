@@ -5,6 +5,7 @@ import pickUpNewDate, {
     Calendar,
     DAY_NAMES,
     LABELS,
+    createLocalDate,
     getCalendarViewModel,
     getDaysInMonth,
     getMonthGrid,
@@ -192,6 +193,28 @@ test("render includes aria-live region for month changes", () => {
     assert.equal(liveRegion?.getAttribute("aria-live"), "polite");
     calendar.nextMonth();
     assert.match(liveRegion?.textContent ?? "", /2024/);
+});
+
+test("getMonthGrid uses correct weekday for year 50 (not mapped to 1950)", () => {
+    const grid50 = getMonthGrid(50, 2);
+    const grid1950 = getMonthGrid(1950, 2);
+
+    assert.notDeepEqual(grid50, grid1950);
+
+    assert.deepEqual(grid50, [
+        [null, 1, 2, 3, 4, 5, 6],
+        [7, 8, 9, 10, 11, 12, 13],
+        [14, 15, 16, 17, 18, 19, 20],
+        [21, 22, 23, 24, 25, 26, 27],
+        [28, null, null, null, null, null, null]
+    ]);
+});
+
+test("createLocalDate preserves years 1 through 99", () => {
+    const d = createLocalDate(50, 3, 15);
+    assert.equal(d.getFullYear(), 50);
+    assert.equal(d.getMonth(), 2);
+    assert.equal(d.getDate(), 15);
 });
 
 function createCalendarInstance(year: number, month: number) {

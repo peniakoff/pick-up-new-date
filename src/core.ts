@@ -114,8 +114,15 @@ export function getDaysInMonth(year: number, month: number): number {
     return MONTH_DAYS[month - 1] ?? 31;
 }
 
+export function createLocalDate(year: number, month: number, day: number): Date {
+    const date = new Date();
+    date.setFullYear(year, month - 1, day);
+    date.setHours(0, 0, 0, 0);
+    return date;
+}
+
 export function resolveLanguage(lang?: string): Language {
-    if (!lang || !(lang in DAY_NAMES)) {
+    if (!lang || !Object.prototype.hasOwnProperty.call(DAY_NAMES, lang)) {
         if (lang) {
             console.warn(`PickUpNewDate: unsupported language "${lang}", falling back to "eng".`);
         }
@@ -133,7 +140,7 @@ export function getMonthGrid(year: number, month: number): Array<Array<number | 
     validateYear(year);
     validateMonth(month);
 
-    const firstWeekday = toMondayFirst(new Date(year, month - 1, 1).getDay());
+    const firstWeekday = toMondayFirst(createLocalDate(year, month, 1).getDay());
     const totalDays = getDaysInMonth(year, month);
     const weeks: Array<Array<number | null>> = [];
     let currentWeek: Array<number | null> = new Array(7).fill(null);
