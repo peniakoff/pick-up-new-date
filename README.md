@@ -5,8 +5,6 @@ The calendar. It's not complicated. It has to be simple. That's all.
 The simple project of calendar written in JavaScript, CSS and HTML. It's also (potentially) Google Material styled. The calendar supports English, Polish and German.
 It supports keyboard navigation with left/right arrows, multiple calendar instances on one page and an optional date selection callback.
 
-~Running example of this calendar you can see here: http://tomaszmiller.pl/PickUpNewDate~
-
 <strong>If you have any questions or suggestions - look at my GitHub account and contact me!</strong>
 
 ## Installation
