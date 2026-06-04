@@ -37,10 +37,8 @@
     --pun-header-line: 40px;
     --pun-padding: 12px;
     --pun-margin: 24px;
-}
 
-@media (prefers-color-scheme: dark) {
-    .pun-root:not([data-pun-theme="light"]) {
+    &[data-pun-theme="dark"] {
         --pun-bg: #1c1c1e;
         --pun-surface: #2c2c2e;
         --pun-border: rgba(255, 255, 255, 0.1);
@@ -62,29 +60,31 @@
         --pun-nav-bg-active: rgba(255, 255, 255, 0.14);
         --pun-focus: #0a84ff;
     }
-}
 
-.pun-root[data-pun-theme="dark"] {
-    --pun-bg: #1c1c1e;
-    --pun-surface: #2c2c2e;
-    --pun-border: rgba(255, 255, 255, 0.1);
-    --pun-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
-    --pun-text: #f5f5f7;
-    --pun-text-muted: #98989d;
-    --pun-accent: #0a84ff;
-    --pun-accent-hover: #409cff;
-    --pun-weekday-bg: #3a3a3c;
-    --pun-weekday-text: #f5f5f7;
-    --pun-weekend-sat-bg: #3d3520;
-    --pun-weekend-sat-text: #ffd54f;
-    --pun-weekend-sun-bg: #3d2430;
-    --pun-weekend-sun-text: #f48fb1;
-    --pun-day-bg: #3a3a3c;
-    --pun-day-text: var(--pun-text);
-    --pun-day-hover: rgba(10, 132, 255, 0.2);
-    --pun-nav-bg-hover: rgba(255, 255, 255, 0.08);
-    --pun-nav-bg-active: rgba(255, 255, 255, 0.14);
-    --pun-focus: #0a84ff;
+    @media (prefers-color-scheme: dark) {
+        &:not([data-pun-theme="light"]) {
+            --pun-bg: #1c1c1e;
+            --pun-surface: #2c2c2e;
+            --pun-border: rgba(255, 255, 255, 0.1);
+            --pun-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+            --pun-text: #f5f5f7;
+            --pun-text-muted: #98989d;
+            --pun-accent: #0a84ff;
+            --pun-accent-hover: #409cff;
+            --pun-weekday-bg: #3a3a3c;
+            --pun-weekday-text: #f5f5f7;
+            --pun-weekend-sat-bg: #3d3520;
+            --pun-weekend-sat-text: #ffd54f;
+            --pun-weekend-sun-bg: #3d2430;
+            --pun-weekend-sun-text: #f48fb1;
+            --pun-day-bg: #3a3a3c;
+            --pun-day-text: var(--pun-text);
+            --pun-day-hover: rgba(10, 132, 255, 0.2);
+            --pun-nav-bg-hover: rgba(255, 255, 255, 0.08);
+            --pun-nav-bg-active: rgba(255, 255, 255, 0.14);
+            --pun-focus: #0a84ff;
+        }
+    }
 }
 
 table.pun-calendar {
@@ -250,7 +250,7 @@ table.pun-calendar td.pun-dayCell .pun-dayButton.pun-selected:hover {
     background-color: var(--pun-accent-hover);
 }
 
-table.pun-calendar td.pun-dayCell:active .pun-dayButton:not(.pun-selected) {
+table.pun-calendar td.pun-dayCell .pun-dayButton:not(.pun-selected):active {
     box-shadow: var(--pun-day-active-shadow);
 }
 

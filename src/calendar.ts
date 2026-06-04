@@ -44,6 +44,18 @@ export class Calendar {
             throw new Error('PickUpNewDate: options.theme must be "light", "dark", or "auto".');
         }
 
+        if (typeof this.options.classNames !== "undefined") {
+            const cn = this.options.classNames;
+            if (typeof cn !== "object" || cn === null || Array.isArray(cn)) {
+                throw new Error("PickUpNewDate: options.classNames must be an object.");
+            }
+            for (const key of ["root", "table", "navButton", "dayButton"] as const) {
+                if (typeof cn[key] !== "undefined" && typeof cn[key] !== "string") {
+                    throw new Error(`PickUpNewDate: options.classNames.${key} must be a string.`);
+                }
+            }
+        }
+
         this.root = this.resolveRoot(area);
         this.applyRootStyling();
 
@@ -123,6 +135,7 @@ export class Calendar {
             return;
         }
         this.root.removeEventListener("keydown", this.handleRootKeydown, true);
+        this.removeRootStyling();
         this.root.replaceChildren();
         this.liveRegion = null;
         this.destroyed = true;
@@ -343,60 +356,34 @@ export class Calendar {
     }
 
     private handleDayKey(key: string, currentDay: number): boolean {
-        const weeks = getCalendarViewModel(this.currentYear, this.currentMonth, this.lang).weeks;
-        let row = -1;
-        let col = -1;
-
-        weeks.forEach((week, rowIndex) => {
-            week.forEach((day, colIndex) => {
-                if (day === currentDay) {
-                    row = rowIndex;
-                    col = colIndex;
-                }
-            });
-        });
-
-        if (row < 0 || col < 0) {
-            return false;
-        }
-
-        let dRow = 0;
-        let dCol = 0;
+        const totalDays = getDaysInMonth(this.currentYear, this.currentMonth);
+        let nextDay: number;
 
         switch (key) {
             case "ArrowLeft":
-                dCol = -1;
+                nextDay = currentDay - 1;
                 break;
             case "ArrowRight":
-                dCol = 1;
+                nextDay = currentDay + 1;
                 break;
             case "ArrowUp":
-                dRow = -1;
+                nextDay = currentDay - 7;
                 break;
             case "ArrowDown":
-                dRow = 1;
+                nextDay = currentDay + 7;
                 break;
             default:
                 return false;
         }
-        let nextRow = row;
-        let nextCol = col;
-        const maxSteps = weeks.length * 7;
-        for (let step = 0; step < maxSteps; step += 1) {
-            nextRow += dRow;
-            nextCol += dCol;
-            if (nextCol < 0 || nextCol > 6 || nextRow < 0 || nextRow >= weeks.length) {
-                return false;
-            }
-            const nextDay = weeks[nextRow]?.[nextCol];
-            if (nextDay !== null && nextDay !== undefined) {
-                const button = this.root.querySelector<HTMLButtonElement>(
-                    `button.pun-dayButton[data-day="${nextDay}"]`
-                );
-                button?.focus();
-                return true;
-            }
+
+        if (nextDay >= 1 && nextDay <= totalDays) {
+            const button = this.root.querySelector<HTMLButtonElement>(
+                `button.pun-dayButton[data-day="${nextDay}"]`
+            );
+            button?.focus();
+            return true;
         }
+
         return false;
     }
 
@@ -472,15 +459,20 @@ export class Calendar {
         );
     }
 
+    private rootClassNameTokens(): string[] {
+        const extraRoot = this.options.classNames?.root;
+        return extraRoot ? extraRoot.split(/\s+/).filter(Boolean) : [];
+    }
+
+    private removeRootStyling(): void {
+        this.root.classList.remove("pun-root");
+        this.rootClassNameTokens().forEach((token) => this.root.classList.remove(token));
+        this.root.removeAttribute("data-pun-theme");
+    }
+
     private applyRootStyling(): void {
         this.root.classList.add("pun-root");
-        const extraRoot = this.options.classNames?.root;
-        if (extraRoot) {
-            extraRoot
-                .split(/\s+/)
-                .filter(Boolean)
-                .forEach((token) => this.root.classList.add(token));
-        }
+        this.rootClassNameTokens().forEach((token) => this.root.classList.add(token));
 
         const theme: CalendarTheme = this.options.theme ?? "auto";
         if (theme === "auto") {

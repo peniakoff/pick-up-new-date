@@ -158,6 +158,8 @@ test("destroy clears root and prevents further usage", () => {
     const { calendar, root } = createCalendarInstance(2024, 3);
     calendar.destroy();
     assert.equal(root.childElementCount, 0);
+    assert.equal(root.classList.contains("pun-root"), false);
+    assert.equal(root.getAttribute("data-pun-theme"), null);
     assert.throws(() => {
         calendar.nextMonth();
     }, /destroyed/);
@@ -320,16 +322,6 @@ class MockElement {
 
     setAttribute(name: string, value: string): void {
         this.attributes.set(name, value);
-        if (name === "aria-selected") {
-            if (value === "true") {
-                this.classList.add("pun-selected");
-            } else {
-                this.classList.remove("pun-selected");
-            }
-        }
-        if (name === "aria-current" && value === "date") {
-            this.classList.add("pun-today");
-        }
         if (name === "aria-disabled" && value === "true") {
             this.disabled = true;
         }
