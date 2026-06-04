@@ -1,4 +1,5 @@
 import {
+    assertValidDate,
     compareDateOnly,
     createLocalDate,
     getCalendarViewModel,
@@ -85,6 +86,7 @@ export class Calendar {
 
         if (this.options.initialDate) {
             const initial = this.options.initialDate;
+            assertValidDate(initial, "options.initialDate");
             validateYear(initial.getFullYear());
             validateMonth(initial.getMonth() + 1);
             this.currentYear = initial.getFullYear();
@@ -543,14 +545,19 @@ export class Calendar {
     }
 
     private validateSelectionOptions(): void {
-        const { minDate, maxDate, disabledDates, disabledDaysOfWeek, firstDayOfWeek } = this.options;
+        const { minDate, maxDate, disabledDates, disabledDaysOfWeek, firstDayOfWeek, initialDate } =
+            this.options;
 
-        if (minDate !== undefined && !(minDate instanceof Date)) {
-            throw new Error("PickUpNewDate: options.minDate must be a Date.");
+        if (initialDate !== undefined) {
+            assertValidDate(initialDate, "options.initialDate");
         }
 
-        if (maxDate !== undefined && !(maxDate instanceof Date)) {
-            throw new Error("PickUpNewDate: options.maxDate must be a Date.");
+        if (minDate !== undefined) {
+            assertValidDate(minDate, "options.minDate");
+        }
+
+        if (maxDate !== undefined) {
+            assertValidDate(maxDate, "options.maxDate");
         }
 
         if (minDate && maxDate && compareDateOnly(minDate, maxDate) > 0) {
@@ -562,9 +569,7 @@ export class Calendar {
                 throw new Error("PickUpNewDate: options.disabledDates must be an array.");
             }
             for (const date of disabledDates) {
-                if (!(date instanceof Date)) {
-                    throw new Error("PickUpNewDate: options.disabledDates must contain Date objects.");
-                }
+                assertValidDate(date, "options.disabledDates[]");
             }
         }
 

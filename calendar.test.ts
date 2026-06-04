@@ -266,6 +266,19 @@ test("compareDateOnly compares calendar days without time", () => {
     assert.equal(compareDateOnly(earlier, createLocalDate(2024, 2, 10)), 0);
 });
 
+test("compareDateOnly rejects invalid dates", () => {
+    const valid = createLocalDate(2024, 2, 10);
+    const invalid = new Date("bad");
+
+    assert.throws(() => {
+        compareDateOnly(invalid, valid);
+    }, /compareDateOnly\(a\) must be a valid Date/);
+
+    assert.throws(() => {
+        compareDateOnly(valid, invalid);
+    }, /compareDateOnly\(b\) must be a valid Date/);
+});
+
 test("getMonthGrid supports configurable first day of week", () => {
     assert.notDeepEqual(getMonthGrid(2024, 2), getMonthGrid(2024, 2, 0));
 
@@ -410,6 +423,50 @@ test("pickUpNewDate validates minDate and maxDate order", () => {
             maxDate: createLocalDate(2024, 2, 1)
         });
     }, /minDate must be on or before/);
+});
+
+test("pickUpNewDate rejects invalid minDate and maxDate", () => {
+    const mockDocument = createMockDocument();
+    const root = mockDocument.createElement("div");
+    root.id = "calendar-root";
+    mockDocument.registerElement(root);
+    const invalid = new Date("bad");
+
+    assert.throws(() => {
+        pickUpNewDate("eng", "calendar-root", {
+            document: mockDocument,
+            minDate: invalid
+        });
+    }, /options.minDate must be a valid Date/);
+
+    assert.throws(() => {
+        pickUpNewDate("eng", "calendar-root", {
+            document: mockDocument,
+            maxDate: invalid
+        });
+    }, /options.maxDate must be a valid Date/);
+});
+
+test("pickUpNewDate rejects invalid disabledDates and initialDate", () => {
+    const mockDocument = createMockDocument();
+    const root = mockDocument.createElement("div");
+    root.id = "calendar-root";
+    mockDocument.registerElement(root);
+    const invalid = new Date("bad");
+
+    assert.throws(() => {
+        pickUpNewDate("eng", "calendar-root", {
+            document: mockDocument,
+            disabledDates: [invalid]
+        });
+    }, /options.disabledDates\[\] must be a valid Date/);
+
+    assert.throws(() => {
+        pickUpNewDate("eng", "calendar-root", {
+            document: mockDocument,
+            initialDate: invalid
+        });
+    }, /options.initialDate must be a valid Date/);
 });
 
 function createCalendarInstance(

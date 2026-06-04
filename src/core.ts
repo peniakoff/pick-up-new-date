@@ -138,7 +138,20 @@ export function createLocalDate(year: number, month: number, day: number): Date 
     return date;
 }
 
+export function isValidDate(value: unknown): value is Date {
+    return value instanceof Date && Number.isFinite(value.getTime());
+}
+
+export function assertValidDate(value: unknown, label: string): asserts value is Date {
+    if (!isValidDate(value)) {
+        throw new RangeError(`PickUpNewDate: ${label} must be a valid Date.`);
+    }
+}
+
 export function compareDateOnly(a: Date, b: Date): -1 | 0 | 1 {
+    assertValidDate(a, "compareDateOnly(a)");
+    assertValidDate(b, "compareDateOnly(b)");
+
     const yearDiff = a.getFullYear() - b.getFullYear();
     if (yearDiff !== 0) {
         return yearDiff < 0 ? -1 : 1;
@@ -226,7 +239,7 @@ export function isDaySelectable(
         return false;
     }
 
-    if (constraints.disabledDaysOfWeek?.includes(date.getDay())) {
+    if (constraints.disabledDaysOfWeek?.includes(date.getDay() as FirstDayOfWeek)) {
         return false;
     }
 

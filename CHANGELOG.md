@@ -16,6 +16,9 @@
 
 - Weekend cell classes (`.pun-saturday`, `.pun-sunday`) are applied from the actual weekday, not grid column index.
 - Keyboard arrow navigation skips disabled days within the current month.
+- `options.minDate`, `options.maxDate`, `options.disabledDates`, and `options.initialDate` must be valid `Date` values (finite timestamp).
+- `options.disabledDaysOfWeek` is typed as `readonly FirstDayOfWeek[]` (0–6).
+- Removed unused `constraints` field from `CalendarViewModelOptions` (use `isDaySelectable()` for headless UI).
 
 ## 2.0.0
 

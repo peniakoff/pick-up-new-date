@@ -45,12 +45,11 @@ export interface DateSelectionConstraints {
     /** Specific calendar days excluded from selection */
     disabledDates?: readonly Date[];
     /** 0 = Sunday … 6 = Saturday (JavaScript Date.getDay() convention) */
-    disabledDaysOfWeek?: readonly number[];
+    disabledDaysOfWeek?: readonly FirstDayOfWeek[];
 }
 
 export interface CalendarViewModelOptions {
     firstDayOfWeek?: FirstDayOfWeek;
-    constraints?: DateSelectionConstraints;
 }
 
 export interface CalendarOptions extends DateSelectionConstraints {
