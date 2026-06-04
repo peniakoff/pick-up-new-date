@@ -1,4 +1,13 @@
-import type { CalendarViewModel, LabelSet, Labels, Language, LocalizedStrings } from "./types.js";
+import type {
+    CalendarViewModel,
+    CalendarViewModelOptions,
+    DateSelectionConstraints,
+    FirstDayOfWeek,
+    LabelSet,
+    Labels,
+    Language,
+    LocalizedStrings
+} from "./types.js";
 import { MAX_YEAR, MIN_YEAR } from "./types.js";
 
 function deepFreeze<T>(value: T): T {
@@ -86,6 +95,8 @@ export const LABELS = deepFreeze({
 
 const MONTH_DAYS = deepFreeze([31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31] as const);
 
+const DEFAULT_FIRST_DAY_OF_WEEK: FirstDayOfWeek = 1;
+
 export function validateYear(year: number): void {
     if (!Number.isInteger(year) || year < MIN_YEAR || year > MAX_YEAR) {
         throw new RangeError("PickUpNewDate: year must be an integer between 1 and 9999.");
@@ -95,6 +106,12 @@ export function validateYear(year: number): void {
 export function validateMonth(month: number): void {
     if (!Number.isInteger(month) || month < 1 || month > 12) {
         throw new RangeError("PickUpNewDate: month must be an integer between 1 and 12.");
+    }
+}
+
+export function validateFirstDayOfWeek(firstDayOfWeek: number): void {
+    if (!Number.isInteger(firstDayOfWeek) || firstDayOfWeek < 0 || firstDayOfWeek > 6) {
+        throw new RangeError("PickUpNewDate: firstDayOfWeek must be an integer between 0 and 6.");
     }
 }
 
@@ -121,6 +138,39 @@ export function createLocalDate(year: number, month: number, day: number): Date 
     return date;
 }
 
+export function compareDateOnly(a: Date, b: Date): -1 | 0 | 1 {
+    const yearDiff = a.getFullYear() - b.getFullYear();
+    if (yearDiff !== 0) {
+        return yearDiff < 0 ? -1 : 1;
+    }
+
+    const monthDiff = a.getMonth() - b.getMonth();
+    if (monthDiff !== 0) {
+        return monthDiff < 0 ? -1 : 1;
+    }
+
+    const dayDiff = a.getDate() - b.getDate();
+    if (dayDiff !== 0) {
+        return dayDiff < 0 ? -1 : 1;
+    }
+
+    return 0;
+}
+
+export function dateKey(year: number, month: number, day: number): string {
+    return `${year}-${month}-${day}`;
+}
+
+export function dateKeyFromDate(date: Date): string {
+    return dateKey(date.getFullYear(), date.getMonth() + 1, date.getDate());
+}
+
+export function yearMonthValue(year: number, month: number): number {
+    validateYear(year);
+    validateMonth(month);
+    return year * 12 + (month - 1);
+}
+
 export function resolveLanguage(lang?: string): Language {
     if (!lang || !Object.prototype.hasOwnProperty.call(DAY_NAMES, lang)) {
         if (lang) {
@@ -132,21 +182,82 @@ export function resolveLanguage(lang?: string): Language {
     return lang as Language;
 }
 
-function toMondayFirst(day: number): number {
-    return day === 0 ? 7 : day;
+function weekdayColumn(dayOfWeek: number, firstDayOfWeek: number): number {
+    return (dayOfWeek - firstDayOfWeek + 7) % 7;
 }
 
-export function getMonthGrid(year: number, month: number): Array<Array<number | null>> {
+function rotateDayNames(names: readonly string[], firstDayOfWeek: number): readonly string[] {
+    const monFirstIndex = (firstDayOfWeek + 6) % 7;
+    const rotated = [...names];
+    for (let i = 0; i < monFirstIndex; i += 1) {
+        const first = rotated.shift();
+        if (first !== undefined) {
+            rotated.push(first);
+        }
+    }
+    return rotated;
+}
+
+export function isDaySelectable(
+    year: number,
+    month: number,
+    day: number,
+    constraints?: DateSelectionConstraints
+): boolean {
     validateYear(year);
     validateMonth(month);
 
-    const firstWeekday = toMondayFirst(createLocalDate(year, month, 1).getDay());
+    const maxDay = getDaysInMonth(year, month);
+    if (!Number.isInteger(day) || day < 1 || day > maxDay) {
+        return false;
+    }
+
+    if (!constraints) {
+        return true;
+    }
+
+    const date = createLocalDate(year, month, day);
+
+    if (constraints.minDate && compareDateOnly(date, constraints.minDate) < 0) {
+        return false;
+    }
+
+    if (constraints.maxDate && compareDateOnly(date, constraints.maxDate) > 0) {
+        return false;
+    }
+
+    if (constraints.disabledDaysOfWeek?.includes(date.getDay())) {
+        return false;
+    }
+
+    if (constraints.disabledDates) {
+        const key = dateKey(year, month, day);
+        for (const disabledDate of constraints.disabledDates) {
+            if (dateKeyFromDate(disabledDate) === key) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+export function getMonthGrid(
+    year: number,
+    month: number,
+    firstDayOfWeek: number = DEFAULT_FIRST_DAY_OF_WEEK
+): Array<Array<number | null>> {
+    validateYear(year);
+    validateMonth(month);
+    validateFirstDayOfWeek(firstDayOfWeek);
+
+    const firstWeekday = weekdayColumn(createLocalDate(year, month, 1).getDay(), firstDayOfWeek);
     const totalDays = getDaysInMonth(year, month);
     const weeks: Array<Array<number | null>> = [];
     let currentWeek: Array<number | null> = new Array(7).fill(null);
 
     for (let day = 1; day <= totalDays; day += 1) {
-        const index = day === 1 ? firstWeekday - 1 : (firstWeekday + day - 2) % 7;
+        const index = (firstWeekday + day - 1) % 7;
         currentWeek[index] = day;
 
         if (index === 6 || day === totalDays) {
@@ -168,9 +279,17 @@ export function canNavigateToMonth(year: number, month: number): boolean {
     }
 }
 
-export function getCalendarViewModel(year: number, month: number, lang?: string): CalendarViewModel {
+export function getCalendarViewModel(
+    year: number,
+    month: number,
+    lang?: string,
+    options?: CalendarViewModelOptions
+): CalendarViewModel {
     const language = resolveLanguage(lang);
-    const weeks = getMonthGrid(year, month);
+    const firstDayOfWeek = options?.firstDayOfWeek ?? DEFAULT_FIRST_DAY_OF_WEEK;
+    validateFirstDayOfWeek(firstDayOfWeek);
+
+    const weeks = getMonthGrid(year, month, firstDayOfWeek);
     weeks.forEach((week) => Object.freeze(week));
 
     return Object.freeze({
@@ -178,10 +297,19 @@ export function getCalendarViewModel(year: number, month: number, lang?: string)
         month,
         language,
         monthName: MONTH_NAMES[language][month - 1] ?? "",
-        dayNames: DAY_NAMES[language],
+        dayNames: Object.freeze(rotateDayNames(DAY_NAMES[language], firstDayOfWeek)),
         labels: LABELS[language],
         weeks: Object.freeze(weeks)
     });
 }
 
-export type { CalendarViewModel, LabelSet, Labels, Language, LocalizedStrings };
+export type {
+    CalendarViewModel,
+    CalendarViewModelOptions,
+    DateSelectionConstraints,
+    FirstDayOfWeek,
+    LabelSet,
+    Labels,
+    Language,
+    LocalizedStrings
+};

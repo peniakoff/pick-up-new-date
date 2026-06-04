@@ -31,6 +31,7 @@
     --pun-nav-bg-active: rgba(0, 0, 0, 0.1);
     --pun-nav-text: var(--pun-text-muted);
     --pun-nav-disabled-opacity: 0.35;
+    --pun-day-disabled-opacity: 0.35;
     --pun-focus: #007aff;
     --pun-spacing: 6px;
     --pun-cell-min: 40px;
@@ -252,6 +253,22 @@ table.pun-calendar td.pun-dayCell .pun-dayButton.pun-selected:hover {
 
 table.pun-calendar td.pun-dayCell .pun-dayButton:not(.pun-selected):active {
     box-shadow: var(--pun-day-active-shadow);
+}
+
+table.pun-calendar td.pun-dayCell .pun-dayButton:disabled,
+table.pun-calendar td.pun-dayCell .pun-dayButton.pun-disabled {
+    opacity: var(--pun-day-disabled-opacity);
+    cursor: not-allowed;
+}
+
+table.pun-calendar td.pun-dayCell .pun-dayButton:disabled:hover,
+table.pun-calendar td.pun-dayCell .pun-dayButton.pun-disabled:hover {
+    background-color: transparent;
+}
+
+table.pun-calendar td.pun-dayCell .pun-dayButton:disabled:not(.pun-selected):active,
+table.pun-calendar td.pun-dayCell .pun-dayButton.pun-disabled:not(.pun-selected):active {
+    box-shadow: none;
 }
 
 .pun-liveRegion {

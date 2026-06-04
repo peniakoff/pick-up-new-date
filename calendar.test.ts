@@ -5,10 +5,12 @@ import pickUpNewDate, {
     Calendar,
     DAY_NAMES,
     LABELS,
+    compareDateOnly,
     createLocalDate,
     getCalendarViewModel,
     getDaysInMonth,
     getMonthGrid,
+    isDaySelectable,
     isLeapYear,
     resolveLanguage
 } from "./src/index.ts";
@@ -256,7 +258,165 @@ test("createLocalDate preserves years 1 through 99", () => {
     assert.equal(d.getDate(), 15);
 });
 
-function createCalendarInstance(year: number, month: number) {
+test("compareDateOnly compares calendar days without time", () => {
+    const earlier = createLocalDate(2024, 2, 10);
+    const later = createLocalDate(2024, 3, 1);
+    assert.equal(compareDateOnly(earlier, later), -1);
+    assert.equal(compareDateOnly(later, earlier), 1);
+    assert.equal(compareDateOnly(earlier, createLocalDate(2024, 2, 10)), 0);
+});
+
+test("getMonthGrid supports configurable first day of week", () => {
+    assert.notDeepEqual(getMonthGrid(2024, 2), getMonthGrid(2024, 2, 0));
+
+    assert.deepEqual(getMonthGrid(2024, 2, 0), [
+        [null, null, null, null, 1, 2, 3],
+        [4, 5, 6, 7, 8, 9, 10],
+        [11, 12, 13, 14, 15, 16, 17],
+        [18, 19, 20, 21, 22, 23, 24],
+        [25, 26, 27, 28, 29, null, null]
+    ]);
+});
+
+test("getCalendarViewModel rotates day names for firstDayOfWeek", () => {
+    const mondayFirst = getCalendarViewModel(2024, 2, "eng");
+    const sundayFirst = getCalendarViewModel(2024, 2, "eng", { firstDayOfWeek: 0 });
+
+    assert.deepEqual(mondayFirst.dayNames, DAY_NAMES.eng);
+    assert.equal(sundayFirst.dayNames[0], "Sun");
+    assert.equal(sundayFirst.dayNames[6], "Sat");
+});
+
+test("isDaySelectable respects minDate and maxDate", () => {
+    const constraints = {
+        minDate: createLocalDate(2024, 2, 10),
+        maxDate: createLocalDate(2024, 2, 20)
+    };
+
+    assert.equal(isDaySelectable(2024, 2, 9, constraints), false);
+    assert.equal(isDaySelectable(2024, 2, 10, constraints), true);
+    assert.equal(isDaySelectable(2024, 2, 20, constraints), true);
+    assert.equal(isDaySelectable(2024, 2, 21, constraints), false);
+});
+
+test("isDaySelectable respects disabledDates and disabledDaysOfWeek", () => {
+    assert.equal(
+        isDaySelectable(2024, 2, 14, {
+            disabledDates: [createLocalDate(2024, 2, 14)]
+        }),
+        false
+    );
+
+    assert.equal(isDaySelectable(2024, 2, 4, { disabledDaysOfWeek: [0] }), false);
+    assert.equal(isDaySelectable(2024, 2, 5, { disabledDaysOfWeek: [0] }), true);
+});
+
+test("minDate disables earlier days in the DOM", () => {
+    const mockDocument = createMockDocument();
+    const root = mockDocument.createElement("div");
+    root.id = "calendar-root";
+    mockDocument.registerElement(root);
+
+    const calendar = new Calendar("eng", "calendar-root", {
+        document: mockDocument,
+        initialDate: createLocalDate(2024, 2, 15),
+        minDate: createLocalDate(2024, 2, 10)
+    });
+
+    const disabledDay = root.querySelector('button.pun-dayButton[data-day="5"]');
+    assert.ok(disabledDay);
+    assert.equal(disabledDay?.disabled, true);
+    assert.equal(disabledDay?.classList.contains("pun-disabled"), true);
+
+    calendar.selectDate(5);
+    assert.equal(calendar.getSelectedDate()?.getDate(), 15);
+});
+
+test("maxDate disables next-month navigation at boundary month", () => {
+    const { calendar, root } = createCalendarInstance(2024, 2, {
+        maxDate: createLocalDate(2024, 3, 31)
+    });
+
+    calendar.nextMonth();
+    assert.equal(calendar.currentMonth, 3);
+
+    const navButtons = root.querySelectorAll("button.pun-navButton");
+    assert.equal(navButtons[navButtons.length - 1]?.disabled, true);
+
+    calendar.nextMonth();
+    assert.equal(calendar.currentMonth, 3);
+});
+
+test("initialDate on a disabled day shows month without selection", () => {
+    const mockDocument = createMockDocument();
+    const root = mockDocument.createElement("div");
+    root.id = "calendar-root";
+    mockDocument.registerElement(root);
+
+    const calendar = new Calendar("eng", "calendar-root", {
+        document: mockDocument,
+        initialDate: createLocalDate(2024, 2, 5),
+        minDate: createLocalDate(2024, 2, 10)
+    });
+
+    assert.equal(calendar.currentMonth, 2);
+    assert.equal(calendar.getSelectedDate(), null);
+    assert.equal(root.querySelector("button.pun-dayButton.pun-selected"), null);
+});
+
+test("goToDate does not select a disabled day", () => {
+    const { calendar } = createCalendarInstance(2024, 2, {
+        minDate: createLocalDate(2024, 2, 10)
+    });
+
+    let selected = false;
+    calendar.options.onDateSelect = () => {
+        selected = true;
+    };
+
+    calendar.goToDate(2024, 2, 5);
+    assert.equal(calendar.getSelectedDate(), null);
+    assert.equal(selected, false);
+});
+
+test("weekend classes follow actual weekday when firstDayOfWeek is Sunday", () => {
+    const mockDocument = createMockDocument();
+    const root = mockDocument.createElement("div");
+    root.id = "calendar-root";
+    mockDocument.registerElement(root);
+
+    new Calendar("eng", "calendar-root", {
+        document: mockDocument,
+        initialDate: createLocalDate(2024, 2, 1),
+        firstDayOfWeek: 0
+    });
+
+    const saturdayCell = root.querySelector('td.pun-dayCell.pun-saturday button[data-day="3"]');
+    const sundayCell = root.querySelector('td.pun-dayCell.pun-sunday button[data-day="4"]');
+    assert.ok(saturdayCell);
+    assert.ok(sundayCell);
+});
+
+test("pickUpNewDate validates minDate and maxDate order", () => {
+    const mockDocument = createMockDocument();
+    const root = mockDocument.createElement("div");
+    root.id = "calendar-root";
+    mockDocument.registerElement(root);
+
+    assert.throws(() => {
+        pickUpNewDate("eng", "calendar-root", {
+            document: mockDocument,
+            minDate: createLocalDate(2024, 3, 1),
+            maxDate: createLocalDate(2024, 2, 1)
+        });
+    }, /minDate must be on or before/);
+});
+
+function createCalendarInstance(
+    year: number,
+    month: number,
+    options: Omit<ConstructorParameters<typeof Calendar>[2], "document" | "initialDate"> = {}
+) {
     const mockDocument = createMockDocument();
     const root = mockDocument.createElement("div");
     root.id = "calendar-root";
@@ -267,7 +427,8 @@ function createCalendarInstance(year: number, month: number) {
 
     const calendar = new Calendar("eng", "calendar-root", {
         document: mockDocument,
-        initialDate
+        initialDate,
+        ...options
     });
 
     return { calendar, root, mockDocument };
@@ -365,6 +526,28 @@ class MockElement {
             );
         }
 
+        if (selector.startsWith("td.pun-dayCell.pun-saturday button[data-day=")) {
+            const match = /data-day="(\d+)"/.exec(selector);
+            const day = match?.[1];
+            return this.findInTree(
+                (element) =>
+                    element.classList.contains("pun-dayButton") &&
+                    element.dataset.day === day &&
+                    this.findParentWithClass(element, "pun-saturday") !== null
+            );
+        }
+
+        if (selector.startsWith("td.pun-dayCell.pun-sunday button[data-day=")) {
+            const match = /data-day="(\d+)"/.exec(selector);
+            const day = match?.[1];
+            return this.findInTree(
+                (element) =>
+                    element.classList.contains("pun-dayButton") &&
+                    element.dataset.day === day &&
+                    this.findParentWithClass(element, "pun-sunday") !== null
+            );
+        }
+
         if (selector === "button.pun-dayButton.pun-selected") {
             return this.findInTree(
                 (element) =>
@@ -408,6 +591,19 @@ class MockElement {
             const found = child.findInTree(predicate);
             if (found) {
                 return found;
+            }
+        }
+        return null;
+    }
+
+    private findParentWithClass(element: MockElement, className: string): MockElement | null {
+        for (const child of this.children) {
+            if (child === element) {
+                return this.classList.contains(className) ? this : null;
+            }
+            const found = child.findParentWithClass(element, className);
+            if (found) {
+                return this.classList.contains(className) ? this : found;
             }
         }
         return null;

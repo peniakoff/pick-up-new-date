@@ -2,34 +2,575 @@
 <html lang="en">
 
 <head>
-    <title>Pick Up New Date Calendar | tomaszmiller.pl</title>
+    <title>Pick Up New Date — Demo | tomaszmiller.pl</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light dark">
     <link href="dist/pickupnewdate.css" rel="stylesheet" />
     <style>
-        body {
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #f5f5f7;
+        :root {
+            --demo-bg: #f5f5f7;
+            --demo-surface: #ffffff;
+            --demo-border: rgba(0, 0, 0, 0.08);
+            --demo-text: #1d1d1f;
+            --demo-muted: #6e6e73;
+            --demo-accent: #007aff;
+            --demo-radius: 12px;
+            --demo-font: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
         }
 
         @media (prefers-color-scheme: dark) {
-            body {
-                background: #1c1c1e;
+            :root {
+                --demo-bg: #1c1c1e;
+                --demo-surface: #2c2c2e;
+                --demo-border: rgba(255, 255, 255, 0.1);
+                --demo-text: #f5f5f7;
+                --demo-muted: #98989d;
+                --demo-accent: #0a84ff;
             }
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: var(--demo-font);
+            background: var(--demo-bg);
+            color: var(--demo-text);
+            line-height: 1.45;
+        }
+
+        .demo {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 24px 16px 48px;
+        }
+
+        .demo-header {
+            margin-bottom: 28px;
+        }
+
+        .demo-header h1 {
+            margin: 0 0 8px;
+            font-size: 1.75rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .demo-header p {
+            margin: 0;
+            color: var(--demo-muted);
+            max-width: 52rem;
+        }
+
+        .demo-header a {
+            color: var(--demo-accent);
+        }
+
+        .demo-grid {
+            display: grid;
+            gap: 24px;
+            align-items: start;
+        }
+
+        @media (min-width: 900px) {
+            .demo-grid {
+                grid-template-columns: minmax(280px, 340px) 1fr;
+            }
+        }
+
+        .panel {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .card {
+            background: var(--demo-surface);
+            border: 1px solid var(--demo-border);
+            border-radius: var(--demo-radius);
+            padding: 16px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .card {
+                box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+            }
+        }
+
+        .card h2 {
+            margin: 0 0 12px;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--demo-muted);
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-bottom: 12px;
+        }
+
+        .field:last-child {
+            margin-bottom: 0;
+        }
+
+        .field label {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .field-hint {
+            font-size: 0.75rem;
+            color: var(--demo-muted);
+        }
+
+        select,
+        input[type="date"] {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid var(--demo-border);
+            border-radius: 8px;
+            background: var(--demo-bg);
+            color: var(--demo-text);
+            font: inherit;
+        }
+
+        .checks {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .checks label {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+
+        .checks input {
+            margin-top: 3px;
+        }
+
+        .btn-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        button {
+            padding: 8px 14px;
+            border: 1px solid var(--demo-border);
+            border-radius: 8px;
+            background: var(--demo-bg);
+            color: var(--demo-text);
+            font: inherit;
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+
+        button:hover {
+            border-color: var(--demo-accent);
+        }
+
+        button.primary {
+            background: var(--demo-accent);
+            border-color: var(--demo-accent);
+            color: #fff;
+            font-weight: 600;
+        }
+
+        button.primary:hover {
+            filter: brightness(1.08);
+        }
+
+        .calendar-column {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .calendar-wrap {
+            display: flex;
+            justify-content: center;
+        }
+
+        #calendar {
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .status {
+            display: grid;
+            gap: 8px;
+            font-size: 0.875rem;
+        }
+
+        .status dt {
+            font-weight: 600;
+            color: var(--demo-muted);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .status dd {
+            margin: 0 0 8px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .log {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            max-height: 140px;
+            overflow-y: auto;
+            font-size: 0.8125rem;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .log li {
+            padding: 6px 0;
+            border-bottom: 1px solid var(--demo-border);
+            color: var(--demo-muted);
+        }
+
+        .log li:first-child {
+            color: var(--demo-text);
+        }
+
+        .log-empty {
+            font-size: 0.8125rem;
+            color: var(--demo-muted);
+            font-style: italic;
+        }
+
+        .instances {
+            display: grid;
+            gap: 16px;
+        }
+
+        @media (min-width: 640px) {
+            .instances {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .instance-card {
+            text-align: center;
+        }
+
+        .instance-card h3 {
+            margin: 0 0 8px;
+            font-size: 0.9375rem;
+        }
+
+        .instance-card p {
+            margin: 0 0 12px;
+            font-size: 0.8125rem;
+            color: var(--demo-muted);
+        }
+
+        .instance-mount {
+            display: flex;
+            justify-content: center;
         }
     </style>
 </head>
 
 <body>
-    <div id="calendar"></div>
+    <main class="demo">
+        <header class="demo-header">
+            <h1>Pick Up New Date</h1>
+            <p>
+                Interactive playground for the <strong>pickupnewdate</strong> calendar library.
+                Adjust options on the left, then click <strong>Apply settings</strong> to rebuild the main instance.
+                See the <a href="https://github.com/peniakoff/pick-up-new-date">GitHub repo</a> for API docs.
+            </p>
+        </header>
+
+        <div class="demo-grid">
+            <aside class="panel" aria-label="Calendar options">
+                <div class="card">
+                    <h2>Locale &amp; theme</h2>
+                    <div class="field">
+                        <label for="lang">Language</label>
+                        <select id="lang">
+                            <option value="eng" selected>English</option>
+                            <option value="pl">Polski</option>
+                            <option value="de">Deutsch</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="theme">Theme</label>
+                        <select id="theme">
+                            <option value="auto" selected>Auto (system)</option>
+                            <option value="light">Light</option>
+                            <option value="dark">Dark</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="firstDayOfWeek">First day of week</label>
+                        <select id="firstDayOfWeek">
+                            <option value="1" selected>Monday (EU default)</option>
+                            <option value="0">Sunday (US)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>Date constraints</h2>
+                    <div class="field">
+                        <label for="minDate">minDate</label>
+                        <input type="date" id="minDate" />
+                        <span class="field-hint">Earliest selectable day</span>
+                    </div>
+                    <div class="field">
+                        <label for="maxDate">maxDate</label>
+                        <input type="date" id="maxDate" />
+                        <span class="field-hint">Latest selectable day</span>
+                    </div>
+                    <div class="checks">
+                        <label>
+                            <input type="checkbox" id="disableWeekends" checked />
+                            disabledDaysOfWeek: Saturday &amp; Sunday (0, 6)
+                        </label>
+                        <label>
+                            <input type="checkbox" id="disableHolidays" />
+                            disabledDates: New Year, Jul 4, Dec 25 (current year)
+                        </label>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>Actions</h2>
+                    <div class="btn-row">
+                        <button type="button" class="primary" id="applyBtn">Apply settings</button>
+                        <button type="button" id="resetBtn">Reset defaults</button>
+                    </div>
+                    <div class="btn-row" style="margin-top: 12px;">
+                        <button type="button" id="goTodayBtn">goToDate(today)</button>
+                        <button type="button" id="goSummerBtn">goToDate(2026-06-15)</button>
+                    </div>
+                    <p class="field-hint" style="margin: 12px 0 0;">
+                        Navigation buttons call the live instance API without rebuilding.
+                    </p>
+                </div>
+            </aside>
+
+            <div class="calendar-column">
+                <div class="card calendar-wrap">
+                    <div id="calendar" aria-label="Main calendar instance"></div>
+                </div>
+
+                <div class="card">
+                    <h2>Live state</h2>
+                    <dl class="status">
+                        <dt>Selected date</dt>
+                        <dd id="selectedOut">—</dd>
+                        <dt>Visible month</dt>
+                        <dd id="monthOut">—</dd>
+                    </dl>
+                </div>
+
+                <div class="card">
+                    <h2>Event log</h2>
+                    <ul class="log" id="eventLog" aria-live="polite">
+                        <li class="log-empty">Select a day or change month to see callbacks.</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h2>Multiple instances</h2>
+                    <p class="field-hint" style="margin: 0 0 16px;">
+                        Each <code>pickUpNewDate()</code> call is independent — different language, theme, and constraints.
+                    </p>
+                    <div class="instances">
+                        <div class="instance-card">
+                            <h3>Polish · dark</h3>
+                            <p>Weekends allowed · Monday-first</p>
+                            <div class="instance-mount" id="calendar-pl"></div>
+                        </div>
+                        <div class="instance-card">
+                            <h3>German · light · US week</h3>
+                            <p>Sundays disabled · firstDayOfWeek: 0</p>
+                            <div class="instance-mount" id="calendar-de"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
     <script src="dist/pickupnewdate.umd.js"></script>
     <script>
-        pickUpNewDate("eng", "calendar", { theme: "auto" });
+        (function () {
+            var calendar = null;
+            var logEntries = [];
+
+            var langEl = document.getElementById("lang");
+            var themeEl = document.getElementById("theme");
+            var firstDayEl = document.getElementById("firstDayOfWeek");
+            var minDateEl = document.getElementById("minDate");
+            var maxDateEl = document.getElementById("maxDate");
+            var disableWeekendsEl = document.getElementById("disableWeekends");
+            var disableHolidaysEl = document.getElementById("disableHolidays");
+            var selectedOut = document.getElementById("selectedOut");
+            var monthOut = document.getElementById("monthOut");
+            var eventLog = document.getElementById("eventLog");
+
+            function pad(n) {
+                return String(n).padStart(2, "0");
+            }
+
+            function formatDate(d) {
+                if (!d) return "—";
+                return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+            }
+
+            function formatMonth(year, month) {
+                return year + "-" + pad(month);
+            }
+
+            function parseInputDate(value) {
+                if (!value) return undefined;
+                var parts = value.split("-");
+                return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+            }
+
+            function toInputValue(d) {
+                return formatDate(d);
+            }
+
+            function holidayDates(year) {
+                return [
+                    new Date(year, 0, 1),
+                    new Date(year, 6, 4),
+                    new Date(year, 11, 25)
+                ];
+            }
+
+            function pushLog(message) {
+                logEntries.unshift(message);
+                if (logEntries.length > 8) {
+                    logEntries.length = 8;
+                }
+                eventLog.innerHTML = "";
+                logEntries.forEach(function (entry, index) {
+                    var li = document.createElement("li");
+                    li.textContent = entry;
+                    if (index === 0) {
+                        li.className = "";
+                    }
+                    eventLog.appendChild(li);
+                });
+            }
+
+            function updateStatus() {
+                if (!calendar) {
+                    selectedOut.textContent = "—";
+                    monthOut.textContent = "—";
+                    return;
+                }
+                selectedOut.textContent = formatDate(calendar.getSelectedDate());
+                monthOut.textContent = formatMonth(calendar.currentYear, calendar.currentMonth);
+            }
+
+            function buildOptions() {
+                var options = {
+                    theme: themeEl.value,
+                    firstDayOfWeek: Number(firstDayEl.value),
+                    initialDate: new Date(),
+                    onDateSelect: function (date) {
+                        pushLog("onDateSelect → " + formatDate(date));
+                        updateStatus();
+                    },
+                    onMonthChange: function (year, month) {
+                        pushLog("onMonthChange → " + formatMonth(year, month));
+                        updateStatus();
+                    }
+                };
+
+                var minDate = parseInputDate(minDateEl.value);
+                var maxDate = parseInputDate(maxDateEl.value);
+                if (minDate) options.minDate = minDate;
+                if (maxDate) options.maxDate = maxDate;
+
+                if (disableWeekendsEl.checked) {
+                    options.disabledDaysOfWeek = [0, 6];
+                }
+
+                if (disableHolidaysEl.checked) {
+                    var year = new Date().getFullYear();
+                    options.disabledDates = holidayDates(year);
+                }
+
+                return options;
+            }
+
+            function createMainCalendar() {
+                if (calendar) {
+                    calendar.destroy();
+                }
+                calendar = pickUpNewDate(langEl.value, "calendar", buildOptions());
+                updateStatus();
+                pushLog("Calendar rebuilt with current settings");
+            }
+
+            function setDefaultFormValues() {
+                var year = new Date().getFullYear();
+                langEl.value = "eng";
+                themeEl.value = "auto";
+                firstDayEl.value = "1";
+                minDateEl.value = toInputValue(new Date(year, 0, 1));
+                maxDateEl.value = toInputValue(new Date(year, 11, 31));
+                disableWeekendsEl.checked = true;
+                disableHolidaysEl.checked = false;
+            }
+
+            document.getElementById("applyBtn").addEventListener("click", createMainCalendar);
+            document.getElementById("resetBtn").addEventListener("click", function () {
+                setDefaultFormValues();
+                createMainCalendar();
+            });
+
+            document.getElementById("goTodayBtn").addEventListener("click", function () {
+                if (!calendar) return;
+                var now = new Date();
+                calendar.goToDate(now.getFullYear(), now.getMonth() + 1, now.getDate());
+                updateStatus();
+            });
+
+            document.getElementById("goSummerBtn").addEventListener("click", function () {
+                if (!calendar) return;
+                calendar.goToDate(2026, 6, 15);
+                updateStatus();
+            });
+
+            setDefaultFormValues();
+            createMainCalendar();
+
+            pickUpNewDate("pl", "calendar-pl", {
+                theme: "dark",
+                initialDate: new Date()
+            });
+
+            pickUpNewDate("de", "calendar-de", {
+                theme: "light",
+                firstDayOfWeek: 0,
+                disabledDaysOfWeek: [0],
+                initialDate: new Date()
+            });
+        })();
     </script>
 </body>
 

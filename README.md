@@ -27,6 +27,10 @@ Lightweight **monthly date picker** written in TypeScript, CSS and HTML with **m
 - **Selected state** — visible highlight (`.pun-selected`) and `aria-selected="true"`
 - **`getSelectedDate()`** — read the current selection (`null` if none)
 - **`goToDate(year, month, day?)`** — jump to a month; optionally select a day and fire `onDateSelect`
+- **`minDate` / `maxDate`** — block selection and month navigation outside the allowed range
+- **`disabledDates`** — exclude specific calendar days from selection
+- **`disabledDaysOfWeek`** — exclude weekdays (`0` = Sunday … `6` = Saturday, same as `Date.getDay()`)
+- **`firstDayOfWeek`** — grid and header start day (`1` = Monday default; `0` = Sunday for US layouts)
 
 ### Instance lifecycle and events
 
@@ -41,7 +45,9 @@ Lightweight **monthly date picker** written in TypeScript, CSS and HTML with **m
 
 ### Headless / framework usage
 
-- **`getCalendarViewModel(year, month, lang?)`** — frozen view model (weeks, labels, month name) for custom UI in React, Vue, Next.js, etc.
+- **`getCalendarViewModel(year, month, lang?, options?)`** — frozen view model (weeks, labels, month name) for custom UI in React, Vue, Next.js, etc.; pass `{ firstDayOfWeek }` when the week does not start on Monday
+- **`isDaySelectable(year, month, day, constraints?)`** — whether a day passes `minDate` / `maxDate` / disabled rules (for headless UI)
+- **`compareDateOnly(a, b)`** — compare two `Date` values by calendar day only
 - **`isLeapYear`**, **`getDaysInMonth`**, **`canNavigateToMonth`** — date helpers with input validation
 - **`options.document`** — inject a minimal DOM adapter for SSR or Node tests
 
@@ -74,7 +80,7 @@ Lightweight **monthly date picker** written in TypeScript, CSS and HTML with **m
 
 ### Not included (see roadmap)
 
-Event CRUD, recurrence, iCal sync, notifications, shared calendars, range/time pickers, `minDate`/`maxDate`, configurable week start, RTL, and touch swipe are **not** implemented yet. Planned items are listed in [FEATURE_BACKLOG.md](FEATURE_BACKLOG.md).
+Event CRUD, recurrence, iCal sync, notifications, shared calendars, range/time pickers, RTL, and touch swipe are **not** implemented yet. Planned items are listed in [FEATURE_BACKLOG.md](FEATURE_BACKLOG.md).
 
 ## Installation
 
@@ -88,14 +94,17 @@ npm install pickupnewdate
 
 ### CDN (unpkg / jsDelivr)
 
-Pin a version in production (example: `2.0.0`):
+Pin a version in production (example: `2.1.0`):
 
 ```html
 <div id="calendar"></div>
-<link rel="stylesheet" href="https://unpkg.com/pickupnewdate@2.0.0/dist/pickupnewdate.css">
-<script src="https://unpkg.com/pickupnewdate@2.0.0/dist/pickupnewdate.umd.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/pickupnewdate@2.1.0/dist/pickupnewdate.css">
+<script src="https://unpkg.com/pickupnewdate@2.1.0/dist/pickupnewdate.umd.js"></script>
 <script>
     pickUpNewDate("eng", "calendar", {
+        minDate: new Date(2026, 0, 1),
+        maxDate: new Date(2026, 11, 31),
+        disabledDaysOfWeek: [0, 6],
         onDateSelect: function (date) {
             console.log(date.getFullYear(), date.getMonth() + 1, date.getDate());
         }
@@ -103,7 +112,7 @@ Pin a version in production (example: `2.0.0`):
 </script>
 ```
 
-jsDelivr uses the same paths, for example `https://cdn.jsdelivr.net/npm/pickupnewdate@2.0.0/dist/pickupnewdate.umd.js`.
+jsDelivr uses the same paths, for example `https://cdn.jsdelivr.net/npm/pickupnewdate@2.1.0/dist/pickupnewdate.umd.js`.
 
 The UMD bundle exposes:
 
@@ -196,10 +205,22 @@ export function CalendarWidget() {
 **Headless** — use the framework-agnostic model generator and render your own UI:
 
 ```js
-import { getCalendarViewModel } from "pickupnewdate";
+import { getCalendarViewModel, isDaySelectable } from "pickupnewdate";
 
-const model = getCalendarViewModel(2026, 5, "eng");
+const constraints = {
+    minDate: new Date(2026, 0, 1),
+    maxDate: new Date(2026, 11, 31),
+    disabledDaysOfWeek: [0, 6]
+};
+
+const model = getCalendarViewModel(2026, 5, "eng", { firstDayOfWeek: 0 });
 // model.weeks, model.dayNames, model.labels, model.monthName, ...
+
+model.weeks.flat().forEach((day) => {
+    if (day !== null && isDaySelectable(2026, 5, day, constraints)) {
+        // render selectable day button
+    }
+});
 ```
 
 In SSR/non-browser environments, initialize DOM rendering only on the client, or pass a custom document adapter via `options.document`.
@@ -262,7 +283,7 @@ Import path `pickupnewdate/style.css` is unchanged.
 | `getSelectedDate()` | `Date` copy of selection, or `null` |
 | `destroy()` | Tear down listeners and clear the mount node |
 | `render()` | Re-render the month grid (usually called internally) |
-| `canGoPrev()` / `canGoNext()` | Whether month navigation is allowed within 1–9999 |
+| `canGoPrev()` / `canGoNext()` | Whether month navigation is allowed (year bounds and `minDate` / `maxDate`) |
 
 ### `Calendar` instance properties
 
@@ -277,12 +298,17 @@ Import path `pickupnewdate/style.css` is unchanged.
 
 | Export | Description |
 |--------|-------------|
-| `getCalendarViewModel(year, month, lang?)` | Frozen view model for custom rendering |
-| `getMonthGrid(year, month)` | Monday-first grid of day numbers (`null` = empty cell) |
+| `getCalendarViewModel(year, month, lang?, options?)` | Frozen view model for custom rendering |
+| `getMonthGrid(year, month, firstDayOfWeek?)` | Week grid of day numbers (`null` = empty cell); default Monday-first (`1`) |
+| `isDaySelectable(year, month, day, constraints?)` | Whether a day is selectable under optional constraints |
+| `compareDateOnly(a, b)` | Compare two dates by Y-M-D (`-1`, `0`, or `1`) |
+| `dateKey(year, month, day)` / `dateKeyFromDate(date)` | Stable string keys for calendar days |
+| `yearMonthValue(year, month)` | Numeric month index for range comparisons |
 | `getDaysInMonth(year, month)` | Days in month (handles leap years) |
 | `isLeapYear(year)` | Gregorian leap-year check |
 | `canNavigateToMonth(year, month)` | `true` if year/month pass validation |
 | `validateYear(year)` / `validateMonth(month)` | Throw `RangeError` if invalid |
+| `validateFirstDayOfWeek(n)` | Throw `RangeError` if not 0–6 |
 | `resolveLanguage(lang?)` | Supported language or `eng` fallback |
 | `DAY_NAMES`, `MONTH_NAMES`, `LABELS` | Frozen i18n tables |
 | `MIN_YEAR`, `MAX_YEAR` | `1` and `9999` |
@@ -297,8 +323,15 @@ Import path `pickupnewdate/style.css` is unchanged.
 | `document` | `DocumentAdapter` | Custom `getElementById` / `createElement` for SSR or tests |
 | `theme` | `"light"` \| `"dark"` \| `"auto"` | Color scheme (`"auto"` default; uses OS preference unless forced) |
 | `classNames` | `Partial<Record<"root" \| "table" \| "navButton" \| "dayButton", string>>` | Extra CSS classes merged with library classes |
+| `minDate` | `Date` | Earliest selectable day; also limits backward month navigation |
+| `maxDate` | `Date` | Latest selectable day; also limits forward month navigation |
+| `disabledDates` | `readonly Date[]` | Specific days excluded from selection |
+| `disabledDaysOfWeek` | `readonly number[]` | Weekdays to disable (`0` = Sunday … `6` = Saturday) |
+| `firstDayOfWeek` | `0`–`6` | First column of the grid (`1` = Monday default) |
 
-Exported types: `CalendarTheme`, `CalendarClassNames`.
+Exported types: `CalendarTheme`, `CalendarClassNames`, `DateSelectionConstraints`, `FirstDayOfWeek`, `CalendarViewModelOptions`.
+
+**Notes:** If `initialDate` or `goToDate(..., day)` targets a disabled day, the month still opens but no day is selected and `onDateSelect` is not called. Disabled day buttons use `.pun-disabled` and native `disabled`.
 
 TypeScript types are published from `dist/index.d.ts` after `npm run build`.
 

@@ -1,5 +1,23 @@
-import { createLocalDate, getCalendarViewModel, getDaysInMonth, resolveLanguage, validateMonth, validateYear } from "./core.js";
-import type { CalendarOptions, CalendarRoot, CalendarTheme, DocumentAdapter } from "./types.js";
+import {
+    compareDateOnly,
+    createLocalDate,
+    getCalendarViewModel,
+    getDaysInMonth,
+    isDaySelectable,
+    resolveLanguage,
+    validateFirstDayOfWeek,
+    validateMonth,
+    validateYear,
+    yearMonthValue
+} from "./core.js";
+import type {
+    CalendarOptions,
+    CalendarRoot,
+    CalendarTheme,
+    DateSelectionConstraints,
+    DocumentAdapter,
+    FirstDayOfWeek
+} from "./types.js";
 import { MAX_YEAR, MIN_YEAR } from "./types.js";
 
 function isCalendarRoot(value: unknown): value is CalendarRoot {
@@ -56,6 +74,8 @@ export class Calendar {
             }
         }
 
+        this.validateSelectionOptions();
+
         this.root = this.resolveRoot(area);
         this.applyRootStyling();
 
@@ -69,7 +89,20 @@ export class Calendar {
             validateMonth(initial.getMonth() + 1);
             this.currentYear = initial.getFullYear();
             this.currentMonth = initial.getMonth() + 1;
-            this.selectedDate = createLocalDate(initial.getFullYear(), initial.getMonth() + 1, initial.getDate());
+            if (
+                isDaySelectable(
+                    initial.getFullYear(),
+                    initial.getMonth() + 1,
+                    initial.getDate(),
+                    this.selectionConstraints
+                )
+            ) {
+                this.selectedDate = createLocalDate(
+                    initial.getFullYear(),
+                    initial.getMonth() + 1,
+                    initial.getDate()
+                );
+            }
         }
 
         this.handleRootKeydown = (event: KeyboardEvent) => {
@@ -82,11 +115,29 @@ export class Calendar {
     }
 
     get monthName(): string {
-        return getCalendarViewModel(this.currentYear, this.currentMonth, this.lang).monthName;
+        return getCalendarViewModel(this.currentYear, this.currentMonth, this.lang, this.viewModelOptions)
+            .monthName;
     }
 
     get labels() {
-        return getCalendarViewModel(this.currentYear, this.currentMonth, this.lang).labels;
+        return getCalendarViewModel(this.currentYear, this.currentMonth, this.lang, this.viewModelOptions).labels;
+    }
+
+    private get firstDayOfWeek(): FirstDayOfWeek {
+        return this.options.firstDayOfWeek ?? 1;
+    }
+
+    private get selectionConstraints(): DateSelectionConstraints {
+        return {
+            minDate: this.options.minDate,
+            maxDate: this.options.maxDate,
+            disabledDates: this.options.disabledDates,
+            disabledDaysOfWeek: this.options.disabledDaysOfWeek
+        };
+    }
+
+    private get viewModelOptions() {
+        return { firstDayOfWeek: this.firstDayOfWeek };
     }
 
     getSelectedDate(): Date | null {
@@ -95,16 +146,28 @@ export class Calendar {
 
     canGoPrev(): boolean {
         if (this.currentMonth > 1) {
+            if (!this.canNavigateToPreviousMonth()) {
+                return false;
+            }
             return true;
         }
-        return this.currentYear > MIN_YEAR;
+        if (this.currentYear <= MIN_YEAR) {
+            return false;
+        }
+        return this.canNavigateToPreviousMonth();
     }
 
     canGoNext(): boolean {
         if (this.currentMonth < 12) {
+            if (!this.canNavigateToNextMonth()) {
+                return false;
+            }
             return true;
         }
-        return this.currentYear < MAX_YEAR;
+        if (this.currentYear >= MAX_YEAR) {
+            return false;
+        }
+        return this.canNavigateToNextMonth();
     }
 
     goToDate(year: number, month: number, day?: number): void {
@@ -122,8 +185,10 @@ export class Calendar {
                     `PickUpNewDate: day must be an integer between 1 and ${maxDay} for ${year}-${month}.`
                 );
             }
-            this.selectedDate = createLocalDate(year, month, day);
-            this.options.onDateSelect?.(new Date(this.selectedDate));
+            if (isDaySelectable(year, month, day, this.selectionConstraints)) {
+                this.selectedDate = createLocalDate(year, month, day);
+                this.options.onDateSelect?.(new Date(this.selectedDate));
+            }
         }
 
         this.render();
@@ -177,6 +242,9 @@ export class Calendar {
 
     selectDate(day: number): void {
         this.assertNotDestroyed();
+        if (!isDaySelectable(this.currentYear, this.currentMonth, day, this.selectionConstraints)) {
+            return;
+        }
         this.selectedDate = createLocalDate(this.currentYear, this.currentMonth, day);
         this.options.onDateSelect?.(new Date(this.selectedDate));
         this.render();
@@ -185,7 +253,12 @@ export class Calendar {
     render(): void {
         this.assertNotDestroyed();
         this.renderedAt = new Date();
-        const viewModel = getCalendarViewModel(this.currentYear, this.currentMonth, this.lang);
+        const viewModel = getCalendarViewModel(
+            this.currentYear,
+            this.currentMonth,
+            this.lang,
+            this.viewModelOptions
+        );
         const { labels, dayNames, weeks } = viewModel;
         const monthYearLabel = `${viewModel.monthName}, ${viewModel.year}`;
 
@@ -238,16 +311,17 @@ export class Calendar {
         weeks.forEach((week) => {
             const row = this.documentRef.createElement("tr");
 
-            week.forEach((day, index) => {
+            week.forEach((day) => {
                 const cell = this.documentRef.createElement("td");
                 cell.setAttribute("role", "gridcell");
 
                 if (day !== null) {
                     cell.classList.add("pun-dayCell");
-                    if (index === 5) {
+                    const weekday = createLocalDate(this.currentYear, this.currentMonth, day).getDay();
+                    if (weekday === 6) {
                         cell.classList.add("pun-saturday");
                     }
-                    if (index === 6) {
+                    if (weekday === 0) {
                         cell.classList.add("pun-sunday");
                     }
                     cell.appendChild(this.createDayButton(day));
@@ -357,31 +431,38 @@ export class Calendar {
 
     private handleDayKey(key: string, currentDay: number): boolean {
         const totalDays = getDaysInMonth(this.currentYear, this.currentMonth);
-        let nextDay: number;
+        let step: number;
 
         switch (key) {
             case "ArrowLeft":
-                nextDay = currentDay - 1;
+                step = -1;
                 break;
             case "ArrowRight":
-                nextDay = currentDay + 1;
+                step = 1;
                 break;
             case "ArrowUp":
-                nextDay = currentDay - 7;
+                step = -7;
                 break;
             case "ArrowDown":
-                nextDay = currentDay + 7;
+                step = 7;
                 break;
             default:
                 return false;
         }
 
-        if (nextDay >= 1 && nextDay <= totalDays) {
-            const button = this.root.querySelector<HTMLButtonElement>(
-                `button.pun-dayButton[data-day="${nextDay}"]`
-            );
-            button?.focus();
-            return true;
+        let nextDay = currentDay + step;
+        let attempts = 0;
+
+        while (nextDay >= 1 && nextDay <= totalDays && attempts < 31) {
+            if (isDaySelectable(this.currentYear, this.currentMonth, nextDay, this.selectionConstraints)) {
+                const button = this.root.querySelector<HTMLButtonElement>(
+                    `button.pun-dayButton[data-day="${nextDay}"]`
+                );
+                button?.focus();
+                return true;
+            }
+            nextDay += step;
+            attempts += 1;
         }
 
         return false;
@@ -441,11 +522,100 @@ export class Calendar {
             button.setAttribute("aria-selected", "false");
         }
 
-        button.addEventListener("click", () => {
-            this.selectDate(day);
-        });
+        const selectable = isDaySelectable(
+            this.currentYear,
+            this.currentMonth,
+            day,
+            this.selectionConstraints
+        );
+
+        if (!selectable) {
+            button.disabled = true;
+            button.classList.add("pun-disabled");
+            button.setAttribute("aria-disabled", "true");
+        } else {
+            button.addEventListener("click", () => {
+                this.selectDate(day);
+            });
+        }
 
         return button;
+    }
+
+    private validateSelectionOptions(): void {
+        const { minDate, maxDate, disabledDates, disabledDaysOfWeek, firstDayOfWeek } = this.options;
+
+        if (minDate !== undefined && !(minDate instanceof Date)) {
+            throw new Error("PickUpNewDate: options.minDate must be a Date.");
+        }
+
+        if (maxDate !== undefined && !(maxDate instanceof Date)) {
+            throw new Error("PickUpNewDate: options.maxDate must be a Date.");
+        }
+
+        if (minDate && maxDate && compareDateOnly(minDate, maxDate) > 0) {
+            throw new RangeError("PickUpNewDate: options.minDate must be on or before options.maxDate.");
+        }
+
+        if (disabledDates !== undefined) {
+            if (!Array.isArray(disabledDates)) {
+                throw new Error("PickUpNewDate: options.disabledDates must be an array.");
+            }
+            for (const date of disabledDates) {
+                if (!(date instanceof Date)) {
+                    throw new Error("PickUpNewDate: options.disabledDates must contain Date objects.");
+                }
+            }
+        }
+
+        if (disabledDaysOfWeek !== undefined) {
+            if (!Array.isArray(disabledDaysOfWeek)) {
+                throw new Error("PickUpNewDate: options.disabledDaysOfWeek must be an array.");
+            }
+            for (const day of disabledDaysOfWeek) {
+                if (!Number.isInteger(day) || day < 0 || day > 6) {
+                    throw new RangeError(
+                        "PickUpNewDate: options.disabledDaysOfWeek must contain integers between 0 and 6."
+                    );
+                }
+            }
+        }
+
+        if (firstDayOfWeek !== undefined) {
+            validateFirstDayOfWeek(firstDayOfWeek);
+        }
+    }
+
+    private canNavigateToPreviousMonth(): boolean {
+        const { minDate } = this.options;
+        if (!minDate) {
+            return true;
+        }
+
+        let prevYear = this.currentYear;
+        let prevMonth = this.currentMonth - 1;
+        if (prevMonth < 1) {
+            prevMonth = 12;
+            prevYear -= 1;
+        }
+
+        return yearMonthValue(prevYear, prevMonth) >= yearMonthValue(minDate.getFullYear(), minDate.getMonth() + 1);
+    }
+
+    private canNavigateToNextMonth(): boolean {
+        const { maxDate } = this.options;
+        if (!maxDate) {
+            return true;
+        }
+
+        let nextYear = this.currentYear;
+        let nextMonth = this.currentMonth + 1;
+        if (nextMonth > 12) {
+            nextMonth = 1;
+            nextYear += 1;
+        }
+
+        return yearMonthValue(nextYear, nextMonth) <= yearMonthValue(maxDate.getFullYear(), maxDate.getMonth() + 1);
     }
 
     private isSelectedDay(day: number): boolean {
