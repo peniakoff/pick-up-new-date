@@ -1,5 +1,25 @@
 # Changelog
 
+## 2.1.0
+
+### Added
+
+- `options.minDate` and `options.maxDate` — constrain selectable days and month navigation.
+- `options.disabledDates` — block specific calendar days.
+- `options.disabledDaysOfWeek` — block weekdays using JavaScript convention (`0` = Sunday … `6` = Saturday).
+- `options.firstDayOfWeek` — configurable week start (`1` = Monday default; `0` = Sunday).
+- Headless helpers: `isDaySelectable`, `compareDateOnly`, `dateKey`, `dateKeyFromDate`, `yearMonthValue`, `validateFirstDayOfWeek`.
+- `getMonthGrid(year, month, firstDayOfWeek?)` and `getCalendarViewModel(..., options?)` support custom week start.
+- CSS token `--pun-day-disabled-opacity` and styles for disabled day buttons (`.pun-disabled`).
+
+### Changed
+
+- Weekend cell classes (`.pun-saturday`, `.pun-sunday`) are applied from the actual weekday, not grid column index.
+- Keyboard arrow navigation skips disabled days within the current month.
+- `options.minDate`, `options.maxDate`, `options.disabledDates`, and `options.initialDate` must be valid `Date` values (finite timestamp).
+- `options.disabledDaysOfWeek` is typed as `readonly FirstDayOfWeek[]` (0–6).
+- Removed unused `constraints` field from `CalendarViewModelOptions` (use `isDaySelectable()` for headless UI).
+
 ## 2.0.0
 
 ### Breaking

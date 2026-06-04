@@ -1,7 +1,7 @@
 # Feature backlog — PickUpNewDate
 
 Roadmap after the TypeScript migration and API improvements (development plan).  
-Status legend: **done** = available in the current library release (**v2.0.0+** for styling/theming; see [CHANGELOG.md](CHANGELOG.md) for breaking CSS class renames).
+Status legend: **done** = available in the current library release (**v2.1.0+** for date constraints and week start; **v2.0.0+** for styling/theming; see [CHANGELOG.md](CHANGELOG.md) for breaking CSS class renames).
 
 ## Implemented (current)
 
@@ -45,6 +45,13 @@ Features available in source and in the published `pickupnewdate` package:
 | Styling | Empty grid cells | `.pun-emptyDay` (non-interactive padding cells) |
 | Styling | `color-scheme` on mount | `light dark` on `.pun-root` for native form controls |
 | API | Theme + class hook types | exported `CalendarTheme`, `CalendarClassNames` |
+| Selection | **`minDate` / `maxDate`** | limits selection and month navigation |
+| Selection | **`disabledDates`** | specific days excluded |
+| Selection | **`disabledDaysOfWeek`** | weekday exclusion (`0`–`6`, JS `getDay()`) |
+| Selection | **`firstDayOfWeek`** | configurable grid start (`1` = Monday default) |
+| Selection | Disabled day styling | `.pun-disabled`, `button:disabled`, `--pun-day-disabled-opacity` |
+| Headless | **`isDaySelectable`**, **`compareDateOnly`** | constraint checks for custom UI |
+| Headless | `getMonthGrid` / `getCalendarViewModel` + week start | optional `firstDayOfWeek` |
 
 Full API description and examples: [README.md](README.md). Migration **1.x → 2.0**: README *Migrating* section.
 
@@ -54,10 +61,6 @@ Full API description and examples: [README.md](README.md). Migration **1.x → 2
 
 | Priority | Feature | Status | Effort |
 |----------|---------|--------|--------|
-| P1 | `minDate` / `maxDate` | planned | Low |
-| P1 | `disabledDates` | planned | Low–medium |
-| P1 | `disabledDaysOfWeek` | planned | Low |
-| P1 | Configurable first day of week | planned (currently: Monday fixed) | Low |
 | P2 | Range picker | planned | Medium |
 | P2 | Time picker | planned | Medium |
 | P2 | Locale via `Intl` | planned | Medium |
@@ -89,5 +92,5 @@ Requires a domain layer and usually a backend (API + persistence). **Nothing in 
 
 ## Recommendation
 
-1. Complete **Track A (P1)** within the `pickupnewdate` npm library.
+1. Complete **Track A (P2)** within the `pickupnewdate` npm library (range picker, time picker, Intl, RTL, touch, Storybook, minified CSS).
 2. Plan **Track B** as a separate package or host application, using `getCalendarViewModel()` for the month presentation layer.

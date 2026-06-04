@@ -37,7 +37,22 @@ export type CalendarClassNames = Partial<
     Record<"root" | "table" | "navButton" | "dayButton", string>
 >;
 
-export interface CalendarOptions {
+export type FirstDayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
+export interface DateSelectionConstraints {
+    minDate?: Date;
+    maxDate?: Date;
+    /** Specific calendar days excluded from selection */
+    disabledDates?: readonly Date[];
+    /** 0 = Sunday … 6 = Saturday (JavaScript Date.getDay() convention) */
+    disabledDaysOfWeek?: readonly FirstDayOfWeek[];
+}
+
+export interface CalendarViewModelOptions {
+    firstDayOfWeek?: FirstDayOfWeek;
+}
+
+export interface CalendarOptions extends DateSelectionConstraints {
     onDateSelect?: (date: Date) => void;
     onMonthChange?: (year: number, month: number) => void;
     initialDate?: Date;
@@ -45,6 +60,8 @@ export interface CalendarOptions {
     /** @default "auto" — follows OS; use "light" or "dark" to force via data-pun-theme */
     theme?: CalendarTheme;
     classNames?: CalendarClassNames;
+    /** @default 1 — Monday; use 0 for Sunday (US) */
+    firstDayOfWeek?: FirstDayOfWeek;
 }
 
 export interface CalendarViewModel {
