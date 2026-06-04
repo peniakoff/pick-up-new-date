@@ -1,148 +1,260 @@
-table.calendar {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    border-radius: 20px;
-    box-shadow: 0 10px 30px 1px #BDBDBD;
-    padding: 10px;
-    margin: 30px;
-    cursor: default;
-    border-collapse: separate;
-    border-spacing: 7px;
-    background-color: #fff;
+.pun-root {
+    color-scheme: light dark;
+    font-family: var(--pun-font);
+    --pun-font: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    --pun-radius: 12px;
+    --pun-radius-sm: 8px;
+    --pun-radius-pill: 999px;
+    --pun-bg: #f5f5f7;
+    --pun-surface: #ffffff;
+    --pun-border: rgba(0, 0, 0, 0.08);
+    --pun-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    --pun-text: #1d1d1f;
+    --pun-text-muted: #6e6e73;
+    --pun-accent: #007aff;
+    --pun-accent-hover: #0056b3;
+    --pun-today-ring: var(--pun-accent);
+    --pun-selected-bg: var(--pun-accent);
+    --pun-selected-text: #ffffff;
+    --pun-weekday-bg: #e8e8ed;
+    --pun-weekday-text: #1d1d1f;
+    --pun-weekend-sat-bg: #fff8e1;
+    --pun-weekend-sat-text: #5d4e00;
+    --pun-weekend-sun-bg: #fce4ec;
+    --pun-weekend-sun-text: #880e4f;
+    --pun-day-bg: #f0f0f5;
+    --pun-day-text: var(--pun-text);
+    --pun-day-hover: rgba(0, 122, 255, 0.12);
+    --pun-day-active-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    --pun-nav-bg: transparent;
+    --pun-nav-bg-hover: rgba(0, 0, 0, 0.06);
+    --pun-nav-bg-active: rgba(0, 0, 0, 0.1);
+    --pun-nav-text: var(--pun-text-muted);
+    --pun-nav-disabled-opacity: 0.35;
+    --pun-focus: #007aff;
+    --pun-spacing: 6px;
+    --pun-cell-min: 40px;
+    --pun-header-line: 40px;
+    --pun-padding: 12px;
+    --pun-margin: 24px;
+
+    &[data-pun-theme="dark"] {
+        --pun-bg: #1c1c1e;
+        --pun-surface: #2c2c2e;
+        --pun-border: rgba(255, 255, 255, 0.1);
+        --pun-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+        --pun-text: #f5f5f7;
+        --pun-text-muted: #98989d;
+        --pun-accent: #0a84ff;
+        --pun-accent-hover: #409cff;
+        --pun-weekday-bg: #3a3a3c;
+        --pun-weekday-text: #f5f5f7;
+        --pun-weekend-sat-bg: #3d3520;
+        --pun-weekend-sat-text: #ffd54f;
+        --pun-weekend-sun-bg: #3d2430;
+        --pun-weekend-sun-text: #f48fb1;
+        --pun-day-bg: #3a3a3c;
+        --pun-day-text: var(--pun-text);
+        --pun-day-hover: rgba(10, 132, 255, 0.2);
+        --pun-nav-bg-hover: rgba(255, 255, 255, 0.08);
+        --pun-nav-bg-active: rgba(255, 255, 255, 0.14);
+        --pun-focus: #0a84ff;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        &:not([data-pun-theme="light"]) {
+            --pun-bg: #1c1c1e;
+            --pun-surface: #2c2c2e;
+            --pun-border: rgba(255, 255, 255, 0.1);
+            --pun-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+            --pun-text: #f5f5f7;
+            --pun-text-muted: #98989d;
+            --pun-accent: #0a84ff;
+            --pun-accent-hover: #409cff;
+            --pun-weekday-bg: #3a3a3c;
+            --pun-weekday-text: #f5f5f7;
+            --pun-weekend-sat-bg: #3d3520;
+            --pun-weekend-sat-text: #ffd54f;
+            --pun-weekend-sun-bg: #3d2430;
+            --pun-weekend-sun-text: #f48fb1;
+            --pun-day-bg: #3a3a3c;
+            --pun-day-text: var(--pun-text);
+            --pun-day-hover: rgba(10, 132, 255, 0.2);
+            --pun-nav-bg-hover: rgba(255, 255, 255, 0.08);
+            --pun-nav-bg-active: rgba(255, 255, 255, 0.14);
+            --pun-focus: #0a84ff;
+        }
+    }
 }
 
-table.calendar:focus {
-    outline: 3px solid #64B5F6;
+table.pun-calendar {
+    border-radius: var(--pun-radius);
+    box-shadow: var(--pun-shadow);
+    padding: var(--pun-padding);
+    margin: var(--pun-margin);
+    cursor: default;
+    border-collapse: separate;
+    border-spacing: var(--pun-spacing);
+    background-color: var(--pun-surface);
+    border: 1px solid var(--pun-border);
+    color: var(--pun-text);
+}
+
+table.pun-calendar:focus {
+    outline: 3px solid var(--pun-focus);
     outline-offset: 4px;
 }
 
-table.calendar td, table.calendar th {
+table.pun-calendar td,
+table.pun-calendar th {
     border: 0;
-    border-radius: 6px;
-    min-width: 40px;
+    border-radius: var(--pun-radius-sm);
+    min-width: var(--pun-cell-min);
     text-align: center;
     vertical-align: middle;
     padding: 0;
     margin: 0;
 }
 
-table.calendar td.monthHeader {
-    font-weight: bold;
-    font-size: 18px;
-    line-height: 40px;
+table.pun-calendar td.pun-monthHeader {
+    font-weight: 600;
+    font-size: 17px;
+    line-height: var(--pun-header-line);
+    color: var(--pun-text);
 }
 
-table.calendar td.monthHeader:first-child, table.calendar td.monthHeader:last-child {
-    border-radius: 20px;
+table.pun-calendar td.pun-monthHeader:first-child,
+table.pun-calendar td.pun-monthHeader:last-child {
+    border-radius: var(--pun-radius-sm);
 }
 
-table.calendar td.monthHeader .calendarNavButton {
+table.pun-calendar td.pun-monthHeader .pun-navButton {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
+    width: var(--pun-header-line);
+    height: var(--pun-header-line);
     border: 0;
     padding: 0;
     cursor: pointer;
-    border-radius: 20px;
-    background-color: #64B5F6;
-    box-shadow: 0 2px 6px #BDBDBD;
-    transition: box-shadow .1s, transform .1s;
+    border-radius: var(--pun-radius-sm);
+    background-color: var(--pun-nav-bg);
+    color: var(--pun-nav-text);
+    transition: background-color 0.15s ease, transform 0.1s ease;
 }
 
-table.calendar td.monthHeader .calendarNavButton .calendarNavIcon {
-    width: 40px;
-    line-height: 40px;
-    font-size: 24px;
+table.pun-calendar td.pun-monthHeader .pun-navButton:hover:not(:disabled) {
+    background-color: var(--pun-nav-bg-hover);
+    color: var(--pun-text);
 }
 
-table.calendar td.monthHeader .calendarNavButton:active {
-    box-shadow: 0 5px 8px #BDBDBD;
+table.pun-calendar td.pun-monthHeader .pun-navButton .pun-navIcon {
+    width: var(--pun-header-line);
+    line-height: var(--pun-header-line);
+    font-size: 22px;
+    font-weight: 300;
+}
+
+table.pun-calendar td.pun-monthHeader .pun-navButton:active:not(:disabled) {
+    background-color: var(--pun-nav-bg-active);
     transform: translateY(1px);
 }
 
-table.calendar td.monthHeader .calendarNavButton:disabled {
+table.pun-calendar td.pun-monthHeader .pun-navButton:disabled {
     cursor: not-allowed;
-    opacity: 0.45;
-    box-shadow: none;
+    opacity: var(--pun-nav-disabled-opacity);
     transform: none;
 }
 
-table.calendar td.monthHeader .calendarNavButton:focus-visible,
-table.calendar td.currentMonth .calendarDayButton:focus-visible {
-    outline: 2px solid #1B5E20;
+table.pun-calendar td.pun-monthHeader .pun-navButton:focus-visible,
+table.pun-calendar td.pun-dayCell .pun-dayButton:focus-visible {
+    outline: 2px solid var(--pun-focus);
     outline-offset: 2px;
 }
 
-table.calendar th.weekDayName {
-    border-radius: 20px;
-    background-color: #1B5E20;
-    color: white;
-    font-weight: bold;
-    line-height: 40px;
-    box-shadow: 0 2px 6px #BDBDBD;
+table.pun-calendar th.pun-weekDayName {
+    border-radius: var(--pun-radius-sm);
+    background-color: var(--pun-weekday-bg);
+    color: var(--pun-weekday-text);
+    font-weight: 600;
+    font-size: 13px;
+    line-height: var(--pun-header-line);
 }
 
-table.calendar th.weekDayName:nth-child(6) {
-    background-color: #F57F17;
+table.pun-calendar th.pun-weekDayName:nth-child(6) {
+    background-color: var(--pun-weekend-sat-bg);
+    color: var(--pun-weekend-sat-text);
 }
 
-table.calendar th.weekDayName:last-child {
-    background-color: #880E4F;
+table.pun-calendar th.pun-weekDayName:last-child {
+    background-color: var(--pun-weekend-sun-bg);
+    color: var(--pun-weekend-sun-text);
 }
 
-table.calendar td.currentMonth {
-    border-radius: 20px;
-    background-color: #81C784;
-    line-height: 40px;
-    box-shadow: 0 2px 6px #BDBDBD;
+table.pun-calendar td.pun-dayCell {
+    border-radius: var(--pun-radius-sm);
+    background-color: var(--pun-day-bg);
+    color: var(--pun-day-text);
+    line-height: var(--pun-header-line);
 }
 
-table.calendar td.currentMonth.saturday {
-    background-color: #FFF59D;
+table.pun-calendar td.pun-dayCell.pun-saturday {
+    background-color: var(--pun-weekend-sat-bg);
+    color: var(--pun-weekend-sat-text);
 }
 
-table.calendar td.currentMonth.sunday {
-    background-color: #F48FB1;
+table.pun-calendar td.pun-dayCell.pun-sunday {
+    background-color: var(--pun-weekend-sun-bg);
+    color: var(--pun-weekend-sun-text);
 }
 
-table.calendar td.currentMonth .calendarDayButton {
+table.pun-calendar td.pun-emptyDay {
+    background: transparent;
+    pointer-events: none;
+}
+
+table.pun-calendar td.pun-dayCell .pun-dayButton {
     width: 100%;
-    min-height: 40px;
+    min-height: var(--pun-header-line);
     border: 0;
-    border-radius: 20px;
+    border-radius: var(--pun-radius-sm);
     background: transparent;
     color: inherit;
     font: inherit;
     cursor: pointer;
+    transition: background-color 0.12s ease;
 }
 
-table.calendar td.currentMonth .calendarDayButton.today {
-    background-color: #B39DDB;
+table.pun-calendar td.pun-dayCell .pun-dayButton:hover {
+    background-color: var(--pun-day-hover);
 }
 
-table.calendar td.currentMonth .calendarDayButton.selected {
-    background-color: #3949AB;
-    color: #fff;
-    font-weight: bold;
+table.pun-calendar td.pun-dayCell .pun-dayButton.pun-today {
+    box-shadow: inset 0 0 0 2px var(--pun-today-ring);
 }
 
-table.calendar td.currentMonth .calendarDayButton.today.selected {
-    background-color: #5E35B1;
+table.pun-calendar td.pun-dayCell .pun-dayButton.pun-selected {
+    background-color: var(--pun-selected-bg);
+    color: var(--pun-selected-text);
+    font-weight: 600;
+    box-shadow: none;
 }
 
-table.calendar tr:nth-child(1n+3) td.currentMonth:hover {
-    background-color: #FF7043;
-    color: #111;
-    cursor: pointer;
-    transition: box-shadow 0.1s;
+table.pun-calendar td.pun-dayCell .pun-dayButton.pun-today.pun-selected {
+    background-color: var(--pun-selected-bg);
+    color: var(--pun-selected-text);
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.35);
 }
 
-table.calendar tr:nth-child(1n+3) td.currentMonth:active {
-    box-shadow: 0 5px 8px #BDBDBD;
+table.pun-calendar td.pun-dayCell .pun-dayButton.pun-selected:hover {
+    background-color: var(--pun-accent-hover);
 }
 
-.calendarLiveRegion {
+table.pun-calendar td.pun-dayCell .pun-dayButton:not(.pun-selected):active {
+    box-shadow: var(--pun-day-active-shadow);
+}
+
+.pun-liveRegion {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -154,13 +266,13 @@ table.calendar tr:nth-child(1n+3) td.currentMonth:active {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    table.calendar td.monthHeader .calendarNavButton,
-    table.calendar tr:nth-child(1n + 3) td.currentMonth:hover {
+    table.pun-calendar td.pun-monthHeader .pun-navButton,
+    table.pun-calendar td.pun-dayCell .pun-dayButton {
         transition: none;
     }
 }
 
-.calendarCaption {
+.pun-caption {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -172,33 +284,32 @@ table.calendar tr:nth-child(1n+3) td.currentMonth:active {
 }
 
 @media (max-width: 640px) {
-    table.calendar {
+    .pun-root {
+        --pun-cell-min: 0;
+        --pun-header-line: 32px;
+        --pun-padding: 8px;
+        --pun-margin: 12px;
+        --pun-spacing: 4px;
+    }
+
+    table.pun-calendar {
         width: calc(100% - 24px);
-        margin: 12px;
-        border-spacing: 4px;
-        padding: 8px;
     }
 
-    table.calendar td, table.calendar th {
-        min-width: 0;
-    }
-
-    table.calendar td.monthHeader,
-    table.calendar th.weekDayName,
-    table.calendar td.currentMonth .calendarDayButton {
+    table.pun-calendar td.pun-monthHeader,
+    table.pun-calendar th.pun-weekDayName,
+    table.pun-calendar td.pun-dayCell .pun-dayButton {
         font-size: 14px;
-        line-height: 32px;
-        min-height: 32px;
     }
 
-    table.calendar td.monthHeader .calendarNavButton {
-        width: 32px;
-        height: 32px;
+    table.pun-calendar td.pun-monthHeader .pun-navButton {
+        width: var(--pun-header-line);
+        height: var(--pun-header-line);
     }
 
-    table.calendar td.monthHeader .calendarNavButton .calendarNavIcon {
-        width: 32px;
-        line-height: 32px;
-        font-size: 20px;
+    table.pun-calendar td.pun-monthHeader .pun-navButton .pun-navIcon {
+        width: var(--pun-header-line);
+        line-height: var(--pun-header-line);
+        font-size: 18px;
     }
 }

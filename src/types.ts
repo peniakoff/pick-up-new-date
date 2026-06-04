@@ -31,11 +31,20 @@ export type CalendarRoot = HTMLElement & {
     replaceChildren(...nodes: (Node | string)[]): void;
 };
 
+export type CalendarTheme = "light" | "dark" | "auto";
+
+export type CalendarClassNames = Partial<
+    Record<"root" | "table" | "navButton" | "dayButton", string>
+>;
+
 export interface CalendarOptions {
     onDateSelect?: (date: Date) => void;
     onMonthChange?: (year: number, month: number) => void;
     initialDate?: Date;
     document?: DocumentAdapter;
+    /** @default "auto" — follows OS; use "light" or "dark" to force via data-pun-theme */
+    theme?: CalendarTheme;
+    classNames?: CalendarClassNames;
 }
 
 export interface CalendarViewModel {
