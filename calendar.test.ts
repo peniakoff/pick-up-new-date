@@ -118,7 +118,7 @@ test("navigation does not move below minimum year", () => {
     calendar.prevMonth();
     assert.equal(calendar.currentYear, 1);
     assert.equal(calendar.currentMonth, 1);
-    const navButtons = root.querySelectorAll("button.calendarNavButton");
+    const navButtons = root.querySelectorAll("button.pun-navButton");
     assert.equal(navButtons[0]?.disabled, true);
 });
 
@@ -127,7 +127,7 @@ test("navigation does not move above maximum year", () => {
     calendar.nextMonth();
     assert.equal(calendar.currentYear, 9999);
     assert.equal(calendar.currentMonth, 12);
-    const navButtons = root.querySelectorAll("button.calendarNavButton");
+    const navButtons = root.querySelectorAll("button.pun-navButton");
     assert.equal(navButtons[navButtons.length - 1]?.disabled, true);
 });
 
@@ -140,7 +140,7 @@ test("selectDate stores selection and marks selected day in DOM", () => {
     assert.equal(selected?.getMonth(), 1);
     assert.equal(selected?.getDate(), 15);
 
-    const selectedButton = root.querySelector("button.calendarDayButton.selected");
+    const selectedButton = root.querySelector("button.pun-dayButton.pun-selected");
     assert.ok(selectedButton);
     assert.equal(selectedButton?.getAttribute("aria-selected"), "true");
     assert.equal(selectedButton?.textContent, "15");
@@ -188,7 +188,7 @@ test("onDateSelect callback receives local calendar date", () => {
 
 test("render includes aria-live region for month changes", () => {
     const { calendar, root } = createCalendarInstance(2024, 2);
-    const liveRegion = root.querySelector(".calendarLiveRegion");
+    const liveRegion = root.querySelector(".pun-liveRegion");
     assert.ok(liveRegion);
     assert.equal(liveRegion?.getAttribute("aria-live"), "polite");
     calendar.nextMonth();
@@ -208,6 +208,43 @@ test("getMonthGrid uses correct weekday for year 50 (not mapped to 1950)", () =>
         [21, 22, 23, 24, 25, 26, 27],
         [28, null, null, null, null, null, null]
     ]);
+});
+
+test("applyRootStyling adds pun-root and theme attribute", () => {
+    const mockDocument = createMockDocument();
+    const root = mockDocument.createElement("div");
+    root.id = "calendar-root";
+    mockDocument.registerElement(root);
+
+    pickUpNewDate("eng", "calendar-root", {
+        document: mockDocument,
+        theme: "dark",
+        classNames: { root: "my-calendar" }
+    });
+
+    assert.equal(root.classList.contains("pun-root"), true);
+    assert.equal(root.classList.contains("my-calendar"), true);
+    assert.equal(root.getAttribute("data-pun-theme"), "dark");
+
+    const autoRoot = mockDocument.createElement("div");
+    autoRoot.id = "calendar-auto";
+    mockDocument.registerElement(autoRoot);
+    pickUpNewDate("eng", "calendar-auto", { document: mockDocument, theme: "auto" });
+    assert.equal(autoRoot.getAttribute("data-pun-theme"), null);
+});
+
+test("pickUpNewDate validates theme option", () => {
+    const mockDocument = createMockDocument();
+    const root = mockDocument.createElement("div");
+    root.id = "calendar-root";
+    mockDocument.registerElement(root);
+
+    assert.throws(() => {
+        pickUpNewDate("eng", "calendar-root", {
+            document: mockDocument,
+            theme: "neon" as "auto"
+        });
+    }, /options.theme must be/);
 });
 
 test("createLocalDate preserves years 1 through 99", () => {
@@ -285,13 +322,13 @@ class MockElement {
         this.attributes.set(name, value);
         if (name === "aria-selected") {
             if (value === "true") {
-                this.classList.add("selected");
+                this.classList.add("pun-selected");
             } else {
-                this.classList.remove("selected");
+                this.classList.remove("pun-selected");
             }
         }
         if (name === "aria-current" && value === "date") {
-            this.classList.add("today");
+            this.classList.add("pun-today");
         }
         if (name === "aria-disabled" && value === "true") {
             this.disabled = true;
@@ -300,6 +337,10 @@ class MockElement {
 
     getAttribute(name: string): string | null {
         return this.attributes.get(name) ?? null;
+    }
+
+    removeAttribute(name: string): void {
+        this.attributes.delete(name);
     }
 
     appendChild(child: MockElement): MockElement {
@@ -324,33 +365,33 @@ class MockElement {
     }
 
     querySelector(selector: string): MockElement | null {
-        if (selector.startsWith("button.calendarDayButton[data-day=")) {
+        if (selector.startsWith("button.pun-dayButton[data-day=")) {
             const match = /data-day="(\d+)"/.exec(selector);
             const day = match?.[1];
             return this.findInTree(
-                (element) => element.classList.contains("calendarDayButton") && element.dataset.day === day
+                (element) => element.classList.contains("pun-dayButton") && element.dataset.day === day
             );
         }
 
-        if (selector === "button.calendarDayButton.selected") {
+        if (selector === "button.pun-dayButton.pun-selected") {
             return this.findInTree(
                 (element) =>
-                    element.classList.contains("calendarDayButton") && element.classList.contains("selected")
+                    element.classList.contains("pun-dayButton") && element.classList.contains("pun-selected")
             );
         }
 
-        if (selector === ".calendarLiveRegion") {
-            return this.findInTree((element) => element.classList.contains("calendarLiveRegion"));
+        if (selector === ".pun-liveRegion") {
+            return this.findInTree((element) => element.classList.contains("pun-liveRegion"));
         }
 
         return null;
     }
 
     querySelectorAll(selector: string): MockElement[] {
-        if (selector === "button.calendarNavButton") {
+        if (selector === "button.pun-navButton") {
             const matches: MockElement[] = [];
             this.walkTree((element) => {
-                if (element.classList.contains("calendarNavButton")) {
+                if (element.classList.contains("pun-navButton")) {
                     matches.push(element);
                 }
             });

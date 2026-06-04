@@ -5,7 +5,7 @@
 
 The calendar. It's not complicated. It has to be simple. That's all.
 
-Lightweight **monthly date picker** written in TypeScript, CSS and HTML (Material-inspired styling). Supports English, Polish and German, keyboard navigation, accessibility features, and headless integration for React, Vue, or Next.js.
+Lightweight **monthly date picker** written in TypeScript, CSS and HTML with **macOS-inspired** styling, **light/dark mode** (system-aware), and CSS design tokens. Supports English, Polish and German, keyboard navigation, accessibility features, and headless integration for React, Vue, or Next.js.
 
 **If you have any questions or suggestions — look at my GitHub account and contact me!**
 
@@ -17,14 +17,14 @@ Lightweight **monthly date picker** written in TypeScript, CSS and HTML (Materia
 - **Previous / next month** — header buttons and keyboard arrows
 - **Year bounds** — navigation limited to years **1–9999**; buttons disabled at min/max
 - **Today** — highlighted day with `aria-current="date"`
-- **Weekends** — Saturday and Sunday cells styled differently (`.saturday`, `.sunday`)
+- **Weekends** — Saturday and Sunday cells styled differently (`.pun-saturday`, `.pun-sunday`)
 - **Multiple instances** — call `pickUpNewDate()` several times for separate widgets on one page
 
 ### Date selection
 
 - **`onDateSelect(date)`** — callback when a day is clicked (local `Date` object)
 - **`initialDate`** — open on a given month and pre-select that day
-- **Selected state** — visible highlight (`.selected`) and `aria-selected="true"`
+- **Selected state** — visible highlight (`.pun-selected`) and `aria-selected="true"`
 - **`getSelectedDate()`** — read the current selection (`null` if none)
 - **`goToDate(year, month, day?)`** — jump to a month; optionally select a day and fire `onDateSelect`
 
@@ -59,6 +59,13 @@ Lightweight **monthly date picker** written in TypeScript, CSS and HTML (Materia
 - Language dictionaries deep-frozen (`deepFreeze`) to prevent accidental mutation
 - DOM built with **`textContent`** and **`setAttribute`** only (no `innerHTML`)
 
+### Theming (v2)
+
+- **CSS variables** on `.pun-root` (`--pun-accent`, `--pun-surface`, weekend tokens, …) — override without forking the stylesheet
+- **Light / dark / auto** — `options.theme` (`"auto"` follows `prefers-color-scheme`; `"light"` / `"dark"` set `data-pun-theme` on the mount node)
+- **Namespaced classes** — `pun-` prefix avoids collisions with Tailwind, shadcn, etc.
+- **`classNames`** — optional extra classes on `root`, `table`, `navButton`, `dayButton`
+
 ### Distribution and TypeScript
 
 - **ESM**, **CommonJS**, **UMD** bundles plus **`pickupnewdate/style.css`**
@@ -67,7 +74,7 @@ Lightweight **monthly date picker** written in TypeScript, CSS and HTML (Materia
 
 ### Not included (see roadmap)
 
-Event CRUD, recurrence, iCal sync, notifications, shared calendars, range/time pickers, `minDate`/`maxDate`, configurable week start, RTL, dark theme, and touch swipe are **not** implemented yet. Planned items are listed in [FEATURE_BACKLOG.md](FEATURE_BACKLOG.md).
+Event CRUD, recurrence, iCal sync, notifications, shared calendars, range/time pickers, `minDate`/`maxDate`, configurable week start, RTL, and touch swipe are **not** implemented yet. Planned items are listed in [FEATURE_BACKLOG.md](FEATURE_BACKLOG.md).
 
 ## Installation
 
@@ -81,12 +88,12 @@ npm install pickupnewdate
 
 ### CDN (unpkg / jsDelivr)
 
-Pin a version in production (example: `1.0.0`):
+Pin a version in production (example: `2.0.0`):
 
 ```html
 <div id="calendar"></div>
-<link rel="stylesheet" href="https://unpkg.com/pickupnewdate@1.0.0/dist/pickupnewdate.css">
-<script src="https://unpkg.com/pickupnewdate@1.0.0/dist/pickupnewdate.umd.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/pickupnewdate@2.0.0/dist/pickupnewdate.css">
+<script src="https://unpkg.com/pickupnewdate@2.0.0/dist/pickupnewdate.umd.js"></script>
 <script>
     pickUpNewDate("eng", "calendar", {
         onDateSelect: function (date) {
@@ -96,7 +103,7 @@ Pin a version in production (example: `1.0.0`):
 </script>
 ```
 
-jsDelivr uses the same paths, for example `https://cdn.jsdelivr.net/npm/pickupnewdate@1.0.0/dist/pickupnewdate.umd.js`.
+jsDelivr uses the same paths, for example `https://cdn.jsdelivr.net/npm/pickupnewdate@2.0.0/dist/pickupnewdate.umd.js`.
 
 The UMD bundle exposes:
 
@@ -140,9 +147,10 @@ Supported languages:
 ### ES modules
 
 ```js
+import "pickupnewdate/style.css";
 import { pickUpNewDate } from "pickupnewdate";
 
-pickUpNewDate("eng", "calendar");
+pickUpNewDate("eng", "calendar", { theme: "auto" });
 ```
 
 ### CommonJS
@@ -153,9 +161,39 @@ const { pickUpNewDate } = require("pickupnewdate");
 pickUpNewDate("eng", "calendar");
 ```
 
-### Next.js / Vue / React (headless integration)
+### Next.js / Vue / React
 
-Use the framework-agnostic model generator and render your own UI:
+**Built-in DOM calendar** — import CSS once, mount on the client:
+
+```tsx
+// app/layout.tsx or a client component
+import "pickupnewdate/style.css";
+import { pickUpNewDate } from "pickupnewdate";
+import { useEffect, useRef } from "react";
+
+export function CalendarWidget() {
+    const ref = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (!ref.current) return;
+        const instance = pickUpNewDate("eng", ref.current, {
+            theme: "auto",
+            classNames: { root: "my-app-calendar" }
+        });
+        return () => instance.destroy();
+    }, []);
+    return <div ref={ref} />;
+}
+```
+
+```css
+/* globals.css — align with your design system (e.g. shadcn) */
+.my-app-calendar {
+    --pun-accent: hsl(var(--primary));
+    --pun-radius: var(--radius);
+}
+```
+
+**Headless** — use the framework-agnostic model generator and render your own UI:
 
 ```js
 import { getCalendarViewModel } from "pickupnewdate";
@@ -165,6 +203,44 @@ const model = getCalendarViewModel(2026, 5, "eng");
 ```
 
 In SSR/non-browser environments, initialize DOM rendering only on the client, or pass a custom document adapter via `options.document`.
+
+### Theming and CSS tokens
+
+The mount element receives `pun-root`. Tokens are scoped to that node (not global `:root`).
+
+| Token | Purpose |
+|-------|---------|
+| `--pun-surface` | Calendar panel background |
+| `--pun-text` / `--pun-text-muted` | Primary and secondary text |
+| `--pun-accent` | Today ring, selected day, focus |
+| `--pun-weekend-sat-bg` / `--pun-weekend-sun-bg` | Weekend column backgrounds |
+| `--pun-weekday-bg` | Weekday header row |
+| `--pun-radius` | Panel corner radius |
+
+Override in your app:
+
+```css
+.pun-root {
+    --pun-accent: #5856d6;
+}
+```
+
+Force theme: `pickUpNewDate("eng", el, { theme: "dark" })` sets `data-pun-theme="dark"` on the mount node.
+
+### Migrating from 1.x to 2.0
+
+CSS class names are prefixed with `pun-`. Update custom selectors:
+
+| 1.x | 2.0 |
+|-----|-----|
+| `table.calendar` | `table.pun-calendar` |
+| `.calendarNavButton` | `.pun-navButton` |
+| `.calendarDayButton` | `.pun-dayButton` |
+| `.today` / `.selected` | `.pun-today` / `.pun-selected` |
+| `.saturday` / `.sunday` | `.pun-saturday` / `.pun-sunday` |
+| `.calendarLiveRegion` | `.pun-liveRegion` |
+
+Import path `pickupnewdate/style.css` is unchanged.
 
 ## API Reference
 
@@ -219,6 +295,10 @@ In SSR/non-browser environments, initialize DOM rendering only on the client, or
 | `onMonthChange` | `(year: number, month: number) => void` | Called after month changes |
 | `initialDate` | `Date` | Initial visible month and selected day |
 | `document` | `DocumentAdapter` | Custom `getElementById` / `createElement` for SSR or tests |
+| `theme` | `"light"` \| `"dark"` \| `"auto"` | Color scheme (`"auto"` default; uses OS preference unless forced) |
+| `classNames` | `Partial<Record<"root" \| "table" \| "navButton" \| "dayButton", string>>` | Extra CSS classes merged with library classes |
+
+Exported types: `CalendarTheme`, `CalendarClassNames`.
 
 TypeScript types are published from `dist/index.d.ts` after `npm run build`.
 

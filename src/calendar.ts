@@ -1,5 +1,5 @@
 import { createLocalDate, getCalendarViewModel, getDaysInMonth, resolveLanguage, validateMonth, validateYear } from "./core.js";
-import type { CalendarOptions, CalendarRoot, DocumentAdapter } from "./types.js";
+import type { CalendarOptions, CalendarRoot, CalendarTheme, DocumentAdapter } from "./types.js";
 import { MAX_YEAR, MIN_YEAR } from "./types.js";
 
 function isCalendarRoot(value: unknown): value is CalendarRoot {
@@ -37,7 +37,15 @@ export class Calendar {
             throw new Error("PickUpNewDate: options.onMonthChange must be a function.");
         }
 
+        if (
+            typeof this.options.theme !== "undefined" &&
+            !["light", "dark", "auto"].includes(this.options.theme)
+        ) {
+            throw new Error('PickUpNewDate: options.theme must be "light", "dark", or "auto".');
+        }
+
         this.root = this.resolveRoot(area);
+        this.applyRootStyling();
 
         const today = new Date();
         this.currentMonth = today.getMonth() + 1;
@@ -174,28 +182,28 @@ export class Calendar {
         const navRow = this.documentRef.createElement("tr");
         const daysRow = this.documentRef.createElement("tr");
 
-        table.className = "calendar";
+        table.className = this.mergeClassName("pun-calendar", this.options.classNames?.table);
         table.setAttribute("role", "grid");
         table.setAttribute("aria-label", `${labels.calendar}: ${viewModel.monthName} ${viewModel.year}`);
 
         const caption = this.documentRef.createElement("caption");
-        caption.className = "calendarCaption";
+        caption.className = "pun-caption";
         caption.textContent = monthYearLabel;
         table.appendChild(caption);
 
         const prevCell = this.documentRef.createElement("td");
-        prevCell.className = "monthHeader";
+        prevCell.className = "pun-monthHeader";
         prevCell.appendChild(
             this.createNavigationButton("‹", labels.previousMonth, () => this.prevMonth(), !this.canGoPrev())
         );
 
         const titleCell = this.documentRef.createElement("td");
-        titleCell.className = "monthHeader";
+        titleCell.className = "pun-monthHeader";
         titleCell.colSpan = 5;
         titleCell.textContent = monthYearLabel;
 
         const nextCell = this.documentRef.createElement("td");
-        nextCell.className = "monthHeader";
+        nextCell.className = "pun-monthHeader";
         nextCell.appendChild(
             this.createNavigationButton("›", labels.nextMonth, () => this.nextMonth(), !this.canGoNext())
         );
@@ -207,7 +215,7 @@ export class Calendar {
 
         dayNames.forEach((dayName) => {
             const headerCell = this.documentRef.createElement("th");
-            headerCell.className = "weekDayName";
+            headerCell.className = "pun-weekDayName";
             headerCell.scope = "col";
             headerCell.textContent = dayName;
             daysRow.appendChild(headerCell);
@@ -222,16 +230,16 @@ export class Calendar {
                 cell.setAttribute("role", "gridcell");
 
                 if (day !== null) {
-                    cell.classList.add("currentMonth");
+                    cell.classList.add("pun-dayCell");
                     if (index === 5) {
-                        cell.classList.add("saturday");
+                        cell.classList.add("pun-saturday");
                     }
                     if (index === 6) {
-                        cell.classList.add("sunday");
+                        cell.classList.add("pun-sunday");
                     }
                     cell.appendChild(this.createDayButton(day));
                 } else {
-                    cell.classList.add("emptyDay");
+                    cell.classList.add("pun-emptyDay");
                     cell.setAttribute("aria-hidden", "true");
                 }
 
@@ -305,7 +313,7 @@ export class Calendar {
     private ensureLiveRegion(): void {
         if (!this.liveRegion) {
             this.liveRegion = this.documentRef.createElement("div");
-            this.liveRegion.className = "calendarLiveRegion";
+            this.liveRegion.className = "pun-liveRegion";
             this.liveRegion.setAttribute("aria-live", "polite");
             this.liveRegion.setAttribute("aria-atomic", "true");
         }
@@ -317,7 +325,7 @@ export class Calendar {
             return;
         }
 
-        if (target.classList.contains("calendarDayButton")) {
+        if (target.classList.contains("pun-dayButton")) {
             const day = Number(target.dataset.day);
             if (Number.isInteger(day) && this.handleDayKey(event.key, day)) {
                 event.preventDefault();
@@ -383,7 +391,7 @@ export class Calendar {
             const nextDay = weeks[nextRow]?.[nextCol];
             if (nextDay !== null && nextDay !== undefined) {
                 const button = this.root.querySelector<HTMLButtonElement>(
-                    `button.calendarDayButton[data-day="${nextDay}"]`
+                    `button.pun-dayButton[data-day="${nextDay}"]`
                 );
                 button?.focus();
                 return true;
@@ -400,7 +408,7 @@ export class Calendar {
     ): HTMLButtonElement {
         const button = this.documentRef.createElement("button");
         button.type = "button";
-        button.className = "calendarNavButton";
+        button.className = this.mergeClassName("pun-navButton", this.options.classNames?.navButton);
         button.setAttribute("aria-label", label);
         button.disabled = disabled;
         if (disabled) {
@@ -409,7 +417,7 @@ export class Calendar {
         button.addEventListener("click", action);
 
         const iconNode = this.documentRef.createElement("span");
-        iconNode.className = "calendarNavIcon";
+        iconNode.className = "pun-navIcon";
         iconNode.setAttribute("aria-hidden", "true");
         iconNode.textContent = icon;
         button.appendChild(iconNode);
@@ -420,7 +428,7 @@ export class Calendar {
     private createDayButton(day: number): HTMLButtonElement {
         const button = this.documentRef.createElement("button");
         button.type = "button";
-        button.className = "calendarDayButton";
+        button.className = this.mergeClassName("pun-dayButton", this.options.classNames?.dayButton);
         button.textContent = String(day);
         button.dataset.day = String(day);
         button.setAttribute(
@@ -435,12 +443,12 @@ export class Calendar {
             this.currentYear === today.getFullYear();
 
         if (isToday) {
-            button.classList.add("today");
+            button.classList.add("pun-today");
             button.setAttribute("aria-current", "date");
         }
 
         if (this.isSelectedDay(day)) {
-            button.classList.add("selected");
+            button.classList.add("pun-selected");
             button.setAttribute("aria-selected", "true");
         } else {
             button.setAttribute("aria-selected", "false");
@@ -462,6 +470,31 @@ export class Calendar {
             this.selectedDate.getMonth() + 1 === this.currentMonth &&
             this.selectedDate.getDate() === day
         );
+    }
+
+    private applyRootStyling(): void {
+        this.root.classList.add("pun-root");
+        const extraRoot = this.options.classNames?.root;
+        if (extraRoot) {
+            extraRoot
+                .split(/\s+/)
+                .filter(Boolean)
+                .forEach((token) => this.root.classList.add(token));
+        }
+
+        const theme: CalendarTheme = this.options.theme ?? "auto";
+        if (theme === "auto") {
+            this.root.removeAttribute("data-pun-theme");
+        } else {
+            this.root.setAttribute("data-pun-theme", theme);
+        }
+    }
+
+    private mergeClassName(base: string, extra?: string): string {
+        if (!extra) {
+            return base;
+        }
+        return `${base} ${extra}`.trim();
     }
 }
 
